@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Design Specification Summary & Implementation Guide
 
 ## Overview
@@ -430,3 +431,6 @@ This design specification is **comprehensive and implementation-ready**. Develop
 **Last Updated**: January 18, 2026  
 **Designer**: Senior UI/UX Designer  
 **Status**: Ready for Implementation
+=======
+# res-website
+>>>>>>> 7302bc5c90c8105c368bd5250203cd2b0ba1bd10
