@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #6C8EEF;
+            padding-bottom: 10px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        button {
+            background: #6C8EEF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #5A7DD9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .output {
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #7BC67E;
+        }
+
+        .error {
+            color: #E88B8B;
+        }
+
+        .info {
+            color: #A8C5FF;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status.connected {
+            background: #7BC67E;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #E88B8B;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 SpeakEasy API Test Page</h1>
+
+        <div class="section">
+            <h3>Backend Status <span id="status" class="status disconnected">Checking...</span></h3>
+            <button onclick="checkHealth()">Check Health</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div class="section">
+            <h3>1. Authentication</h3>
+            <div>
+                <h4>Register:</h4>
+                <input type="text" id="reg-name" placeholder="Name" value="Test User">
+                <input type="email" id="reg-email" placeholder="Email" value="test@example.com">
+                <input type="password" id="reg-password" placeholder="Password" value="test123">
+                <button onclick="testRegister()">Register</button>
+            </div>
+            <div style="margin-top: 10px;">
+                <h4>Login:</h4>
+                <input type="email" id="login-email" placeholder="Email" value="test@example.com">
+                <input type="password" id="login-password" placeholder="Password" value="test123">
+                <button onclick="testLogin()">Login</button>
+            </div>
+            <div style="margin-top: 10px;">
+                <button onclick="testGetMe()">Get Me</button>
+                <button onclick="testLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>2. User Profile</h3>
+            <button onclick="testGetProfile()">Get Profile</button>
+            <button onclick="testGetStats()">Get Stats</button>
+            <button onclick="testUpdateProfile()">Update Profile</button>
+        </div>
+
+        <div class="section">
+            <h3>3. Sessions</h3>
+            <button onclick="testGetSessions()">Get Sessions</button>
+            <button onclick="testCreateSession()">Create Session</button>
+        </div>
+
+        <div class="section">
+            <h3>4. Settings</h3>
+            <button onclick="testGetSettings()">Get Settings</button>
+            <button onclick="testUpdateSettings()">Update Settings</button>
+        </div>
+
+        <div class="section">
+            <h3>5. AI</h3>
+            <button onclick="testAIChat()">Test Chat</button>
+            <button onclick="testInitConversation()">Init Conversation</button>
+        </div>
+
+        <div class="section">
+            <h3>Output:</h3>
+            <div id="output" class="output">Ready to test...</div>
+        </div>
+    </div>
+
+    <!-- Load API Service -->
+    <script src="js/api-service.js"></script>
+    <script src="js/auth-manager.js"></script>
+
+    <script>
+        // Helper functions
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = 'Output cleared...\n';
+        }
+
+        async function checkHealth() {
+            try {
+                const health = await apiService.healthCheck();
+                if (health.status === 'ok') {
+                    log('✅ Backend is healthy', 'success');
+                    document.getElementById('status').textContent = 'Connected';
+                    document.getElementById('status').className = 'status connected';
+                } else {
+                    log('⚠️ Backend is unhealthy', 'error');
+                    document.getElementById('status').textContent = 'Unhealthy';
+                    document.getElementById('status').className = 'status disconnected';
+                }
+            } catch (error) {
+                log('❌ Backend not available: ' + error.message, 'error');
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').className = 'status disconnected';
+            }
+        }
+
+        // Auth tests
+        async function testRegister() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                log(`📝 Registering user: ${email}...`);
+                const result = await authManager.register(email, password, name);
+                if (result.success) {
+                    log('✅ Registration successful!', 'success');
+                    log(JSON.stringify(result.user, null, 2), 'success');
+                } else {
+                    log('❌ Registration failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                log(`🔐 Logging in: ${email}...`);
+                const result = await authManager.login(email, password);
+                if (result.success) {
+                    log('✅ Login successful!', 'success');
+                    log(JSON.stringify(result.user, null, 2), 'success');
+                } else {
+                    log('❌ Login failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testGetMe() {
+            try {
+                log('👤 Getting current user...');
+                const data = await apiService.getMe();
+                log('✅ Current user:', 'success');
+                log(JSON.stringify(data.user, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogout() {
+            try {
+                log('👋 Logging out...');
+                await authManager.logout();
+                log('✅ Logged out successfully', 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Profile tests
+        async function testGetProfile() {
+            try {
+                log('👤 Getting profile...');
+                const data = await apiService.getProfile();
+                log('✅ Profile:', 'success');
+                log(JSON.stringify(data.user, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testGetStats() {
+            try {
+                log('📊 Getting stats...');
+                const data = await apiService.getStats();
+                log('✅ Stats:', 'success');
+                log(JSON.stringify(data.stats, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testUpdateProfile() {
+            try {
+                log('✏️ Updating profile...');
+                const data = await apiService.updateProfile({
+                    name: 'Updated Name ' + Date.now()
+                });
+                log('✅ Profile updated:', 'success');
+                log(JSON.stringify(data.user, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Session tests
+        async function testGetSessions() {
+            try {
+                log('📚 Getting sessions...');
+                const data = await apiService.getSessions();
+                log(`✅ Found ${data.sessions.length} sessions:`, 'success');
+                log(JSON.stringify(data.sessions, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testCreateSession() {
+            try {
+                log('💾 Creating session...');
+                const sessionData = {
+                    topic: 'Test Conversation',
+                    duration: 300,
+                    messageCount: 5,
+                    transcript: [
+                        { role: 'user', text: 'Hello' },
+                        { role: 'ai', text: 'Hi there!' }
+                    ],
+                    mistakes: [],
+                    vocabulary: []
+                };
+                const data = await apiService.createSession(sessionData);
+                log('✅ Session created:', 'success');
+                log(JSON.stringify(data.session, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Settings tests
+        async function testGetSettings() {
+            try {
+                log('⚙️ Getting settings...');
+                const data = await apiService.getSettings();
+                log('✅ Settings:', 'success');
+                log(JSON.stringify(data.settings, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testUpdateSettings() {
+            try {
+                log('⚙️ Updating settings...');
+                const data = await apiService.updateSettings({
+                    darkMode: true,
+                    showHints: false
+                });
+                log('✅ Settings updated:', 'success');
+                log(JSON.stringify(data.settings, null, 2), 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // AI tests
+        async function testAIChat() {
+            try {
+                log('🤖 Chatting with AI...');
+                const data = await apiService.chatWithAI('Hello, how are you?');
+                log('✅ AI Response:', 'success');
+                log(data.response, 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testInitConversation() {
+            try {
+                log('🤖 Initializing conversation...');
+                const data = await apiService.initConversation({
+                    title: 'Ordering Coffee',
+                    description: 'Practice ordering at a café'
+                });
+                log('✅ Conversation initialized:', 'success');
+                log(data.greeting, 'success');
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Check health on load
+        window.addEventListener('load', () => {
+            checkHealth();
+        });
+    </script>
+</body>
+
+</html>

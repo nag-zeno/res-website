@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// USER MODEL
+// ========================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile  Profile?
+  sessions Session[]
+  settings Settings?
+
+  @@map("users")
+}
+
+// ========================================
+// PROFILE MODEL
+// ========================================
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streak        Int      @default(0)
+  lastActiveAt  DateTime @default(now())
+  totalSessions Int      @default(0)
+  totalMinutes  Int      @default(0)
+  level         String   @default("beginner") // beginner, intermediate, advanced
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// ========================================
+// SESSION MODEL
+// ========================================
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic        String
+  topicId      String?
+  duration     Int // seconds
+  messageCount Int      @default(0)
+  transcript   Json // Full conversation history
+  createdAt    DateTime @default(now())
+
+  mistakes   Mistake[]
+  vocabulary Vocabulary[]
+  feedback   Feedback?
+
+  @@map("sessions")
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ========================================
+// MISTAKE MODEL
+// ========================================
+
+model Mistake {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  original    String
+  correction  String
+  explanation String
+  category    String // grammar, vocabulary, pronunciation
+  createdAt   DateTime @default(now())
+
+  @@map("mistakes")
+  @@index([sessionId])
+}
+
+// ========================================
+// VOCABULARY MODEL
+// ========================================
+
+model Vocabulary {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  word       String
+  definition String
+  example    String
+  level      String // A1, A2, B1, B2, C1, C2
+  createdAt  DateTime @default(now())
+
+  @@map("vocabulary")
+  @@index([sessionId])
+}
+
+// ========================================
+// FEEDBACK MODEL
+// ========================================
+
+model Feedback {
+  id                 String   @id @default(cuid())
+  sessionId          String   @unique
+  session            Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  overallScore       Int // 0-100
+  fluencyScore       Int // 0-100
+  grammarScore       Int // 0-100
+  vocabularyScore    Int // 0-100
+  pronunciationScore Int // 0-100
+  strengths          Json // Array of strings
+  improvements       Json // Array of strings
+  createdAt          DateTime @default(now())
+
+  @@map("feedback")
+}
+
+// ========================================
+// SETTINGS MODEL
+// ========================================
+
+model Settings {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  darkMode      Boolean  @default(false)
+  showHints     Boolean  @default(true)
+  slowMode      Boolean  @default(false)
+  dailyReminder Boolean  @default(false)
+  preferredMode String   @default("both") // voice, text, both
+  updatedAt     DateTime @updatedAt
+
+  @@map("settings")
+}

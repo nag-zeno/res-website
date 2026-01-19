@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .container {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #7BC67E;
+            border-bottom: 2px solid #7BC67E;
+            padding-bottom: 10px;
+        }
+
+        button {
+            background: #6C8EEF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #5A7DD9;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .output {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .user {
+            background: #6C8EEF;
+            text-align: right;
+        }
+
+        .ai {
+            background: #444;
+        }
+
+        .error {
+            background: #E88B8B;
+            color: #000;
+        }
+
+        .success {
+            color: #7BC67E;
+        }
+
+        .info {
+            color: #A8C5FF;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status.ok {
+            background: #7BC67E;
+            color: #000;
+        }
+
+        .status.error {
+            background: #E88B8B;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🤖 Gemini 2.0 Flash API Test</h1>
+
+        <div>
+            <strong>Model:</strong> gemini-2.0-flash-exp<br>
+            <strong>API Key:</strong> AIzaSyCa...OaR8 (hidden)<br>
+            <strong>Status:</strong> <span id="status" class="status error">Not tested</span>
+        </div>
+
+        <hr style="border-color: #444; margin: 20px 0;">
+
+        <h3>Quick Tests:</h3>
+        <button onclick="testSimple()">Test Simple Message</button>
+        <button onclick="testConversation()">Test Conversation</button>
+        <button onclick="testError()">Test Error Handling</button>
+        <button onclick="clearOutput()">Clear</button>
+
+        <h3>Custom Test:</h3>
+        <input type="text" id="customMessage" placeholder="Type your message..." value="Hello! How are you?">
+        <button onclick="testCustom()">Send Custom Message</button>
+
+        <div id="output" class="output">
+            <div class="info">Ready to test Gemini API...</div>
+        </div>
+    </div>
+
+    <script src="js/gemini-service.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = message;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '<div class="info">Output cleared...</div>';
+        }
+
+        async function testSimple() {
+            log('Testing simple message...', 'info');
+
+            try {
+                geminiService.initConversation();
+                const response = await geminiService.sendMessage('Hello! Can you introduce yourself?');
+
+                log('User: Hello! Can you introduce yourself?', 'user');
+                log('AI: ' + response, 'ai');
+
+                document.getElementById('status').textContent = 'Working!';
+                document.getElementById('status').className = 'status ok';
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+                document.getElementById('status').textContent = 'Error';
+                document.getElementById('status').className = 'status error';
+            }
+        }
+
+        async function testConversation() {
+            log('Testing conversation flow...', 'info');
+
+            try {
+                geminiService.initConversation({
+                    title: 'Ordering Coffee',
+                    description: 'Practice ordering at a café',
+                    level: 'intermediate'
+                });
+
+                const messages = [
+                    "Hi, I'd like to order a coffee",
+                    "I'll have a large cappuccino",
+                    "Can I get that to go?"
+                ];
+
+                for (const msg of messages) {
+                    log('User: ' + msg, 'user');
+                    const response = await geminiService.sendMessage(msg);
+                    log('AI: ' + response, 'ai');
+                    await new Promise(r => setTimeout(r, 1000)); // Wait 1s between messages
+                }
+
+                document.getElementById('status').textContent = 'Working!';
+                document.getElementById('status').className = 'status ok';
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testError() {
+            log('Testing error handling...', 'info');
+            log('(This will intentionally cause an error)', 'info');
+
+            try {
+                // Test with invalid API key
+                const oldKey = geminiService.constructor.GEMINI_API_KEY;
+                log('Testing with invalid API key...', 'info');
+
+                // This should trigger error handling
+                const response = await geminiService.sendMessage('Test');
+                log('Response: ' + response, 'ai');
+
+            } catch (error) {
+                log('Error caught: ' + error.message, 'error');
+            }
+        }
+
+        async function testCustom() {
+            const message = document.getElementById('customMessage').value;
+
+            if (!message) {
+                log('Please enter a message', 'error');
+                return;
+            }
+
+            log('User: ' + message, 'user');
+
+            try {
+                geminiService.initConversation();
+                const response = await geminiService.sendMessage(message);
+                log('AI: ' + response, 'ai');
+
+                document.getElementById('status').textContent = 'Working!';
+                document.getElementById('status').className = 'status ok';
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+                document.getElementById('status').textContent = 'Error';
+                document.getElementById('status').className = 'status error';
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('Gemini API Test Page Loaded', 'success');
+            log('Click a button to test the API', 'info');
+        });
+    </script>
+</body>
+
+</html>

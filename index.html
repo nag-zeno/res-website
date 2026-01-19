@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Practice English speaking naturally with AI-powered conversations"
+        data-i18n-content="meta.description">
+    <title data-i18n="meta.title">SpeakEasy - Learn English Speaking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/conversation.css">
+    <link rel="stylesheet" href="css/voice-call.css">
+    <link rel="stylesheet" href="css/topic-library.css">
+    <link rel="stylesheet" href="css/topic-mode-buttons.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="login" class="screen active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="logo-container">
+                    <div class="logo">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM24 32C19.58 32 16 28.42 16 24C16 19.58 19.58 16 24 16C28.42 16 32 19.58 32 24C32 28.42 28.42 32 24 32Z"
+                                fill="currentColor" />
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="app-name">SpeakEasy</h1>
+                <p class="auth-tagline" data-i18n="auth.tagline">Practice English naturally</p>
+            </div>
+
+            <div class="auth-form">
+                <h2 class="auth-title" data-i18n="auth.login.title">Welcome Back</h2>
+                <p class="auth-subtitle" data-i18n="auth.login.subtitle">Sign in to continue your learning journey</p>
+
+                <!-- Social Login Buttons -->
+                <div class="social-login">
+                    <button class="btn-social google" id="google-login">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path
+                                d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 01-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35z"
+                                fill="#4285F4" />
+                            <path
+                                d="M10 20c2.7 0 4.964-.895 6.618-2.423l-3.232-2.509c-.895.6-2.04.955-3.386.955-2.605 0-4.81-1.76-5.595-4.123H1.064v2.59A9.996 9.996 0 0010 20z"
+                                fill="#34A853" />
+                            <path
+                                d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z"
+                                fill="#EA4335" />
+                        </svg>
+                        <span class="btn-label" data-i18n="auth.login.google">Continue with Google</span>
+                    </button>
+
+                    <button class="btn-social facebook" id="facebook-login">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path
+                                d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z"
+                                fill="#1877F2" />
+                        </svg>
+                        <span class="btn-label" data-i18n="auth.login.facebook">Continue with Facebook</span>
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span data-i18n="common.or">or</span>
+                </div>
+
+                <!-- Email Login Form -->
+                <form id="login-form" class="auth-inputs">
+                    <div class="input-group">
+                        <label for="login-email" data-i18n="auth.common.email.label">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input type="email" id="login-email" placeholder="you@example.com"
+                                data-i18n-placeholder="auth.common.email.placeholder" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="login-password" data-i18n="auth.common.password.label">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="login-password" placeholder="Enter your password"
+                                data-i18n-placeholder="auth.login.password.placeholder" required>
+                            <button type="button" class="toggle-password" data-target="login-password">
+                                <span class="show-icon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember-me">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text" data-i18n="auth.login.remember">Remember me</span>
+                        </label>
+                        <a href="#forgot-password" class="link-text" data-i18n="auth.login.forgot">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary" data-i18n="auth.login.submit">Sign In</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        <span data-i18n="auth.login.no_account">Don't have an account?</span>
+                        <a href="#signup" class="link-primary" id="show-signup" data-i18n="auth.login.signup">Sign
+                            up</a>
+                    </p>
+                </div>
+
+                <div class="guest-option">
+                    <button class="btn-guest" id="continue-guest">
+                        <span class="icon">👤</span>
+                        <span class="btn-label" data-i18n="auth.login.guest">Continue as Guest</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Screen -->
+    <div id="signup" class="screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <button class="btn-back" id="back-to-login">
+                    <span>←</span>
+                </button>
+                <div class="logo-container">
+                    <div class="logo">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM24 32C19.58 32 16 28.42 16 24C16 19.58 19.58 16 24 16C28.42 16 32 19.58 32 24C32 28.42 28.42 32 24 32Z"
+                                fill="currentColor" />
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="app-name">SpeakEasy</h1>
+                <p class="auth-tagline" data-i18n="auth.signup.tagline">Start your English learning journey</p>
+            </div>
+
+            <div class="auth-form">
+                <h2 class="auth-title" data-i18n="auth.signup.title">Create Account</h2>
+                <p class="auth-subtitle" data-i18n="auth.signup.subtitle">Join thousands of learners worldwide</p>
+
+                <!-- Social Signup Buttons -->
+                <div class="social-login">
+                    <button class="btn-social google" id="google-signup">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path
+                                d="M19.6 10.227c0-.709-.064-1.39-.182-2.045H10v3.868h5.382a4.6 4.6 0 01-1.996 3.018v2.51h3.232c1.891-1.742 2.982-4.305 2.982-7.35z"
+                                fill="#4285F4" />
+                            <path
+                                d="M10 20c2.7 0 4.964-.895 6.618-2.423l-3.232-2.509c-.895.6-2.04.955-3.386.955-2.605 0-4.81-1.76-5.595-4.123H1.064v2.59A9.996 9.996 0 0010 20z"
+                                fill="#34A853" />
+                            <path
+                                d="M4.405 11.9c-.2-.6-.314-1.24-.314-1.9 0-.66.114-1.3.314-1.9V5.51H1.064A9.996 9.996 0 000 10c0 1.614.386 3.14 1.064 4.49l3.34-2.59z"
+                                fill="#FBBC05" />
+                            <path
+                                d="M10 3.977c1.468 0 2.786.505 3.823 1.496l2.868-2.868C14.959.99 12.695 0 10 0 6.09 0 2.71 2.24 1.064 5.51l3.34 2.59C5.19 5.736 7.395 3.977 10 3.977z"
+                                fill="#EA4335" />
+                        </svg>
+                        <span class="btn-label" data-i18n="auth.signup.google">Sign up with Google</span>
+                    </button>
+
+                    <button class="btn-social facebook" id="facebook-signup">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path
+                                d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z"
+                                fill="#1877F2" />
+                        </svg>
+                        <span class="btn-label" data-i18n="auth.signup.facebook">Sign up with Facebook</span>
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span data-i18n="common.or">or</span>
+                </div>
+
+                <!-- Email Signup Form -->
+                <form id="signup-form" class="auth-inputs">
+                    <div class="input-group">
+                        <label for="signup-name" data-i18n="auth.signup.name.label">Full Name</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="signup-name" placeholder="John Doe"
+                                data-i18n-placeholder="auth.signup.name.placeholder" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="signup-email" data-i18n="auth.common.email.label">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input type="email" id="signup-email" placeholder="you@example.com"
+                                data-i18n-placeholder="auth.common.email.placeholder" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="signup-password" data-i18n="auth.common.password.label">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="signup-password" placeholder="At least 8 characters"
+                                data-i18n-placeholder="auth.signup.password.placeholder" required minlength="8">
+                            <button type="button" class="toggle-password" data-target="signup-password">
+                                <span class="show-icon">👁️</span>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill"></div>
+                            </div>
+                            <span class="strength-text" data-i18n="auth.signup.password.weak">Weak</span>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agree-terms" required>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">
+                                <span data-i18n="auth.signup.agree.prefix">I agree to the</span>
+                                <a href="#terms" class="link-text" data-i18n="auth.signup.agree.terms">Terms</a>
+                                <span data-i18n="auth.signup.agree.and">and</span>
+                                <a href="#privacy" class="link-text" data-i18n="auth.signup.agree.privacy">Privacy
+                                    Policy</a>
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary" data-i18n="auth.signup.submit">Create Account</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        <span data-i18n="auth.signup.have_account">Already have an account?</span>
+                        <a href="#login" class="link-primary" id="show-login" data-i18n="auth.signup.signin">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
+        <div class="loading-content">
+            <div class="logo-container">
+                <div class="logo">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M24 4C12.96 4 4 12.96 4 24C4 35.04 12.96 44 24 44C35.04 44 44 35.04 44 24C44 12.96 35.04 4 24 4ZM24 32C19.58 32 16 28.42 16 24C16 19.58 19.58 16 24 16C28.42 16 32 19.58 32 24C32 28.42 28.42 32 24 32Z"
+                            fill="currentColor" />
+                    </svg>
+                </div>
+            </div>
+            <h1 class="app-name">SpeakEasy</h1>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+            <p class="tagline" data-i18n="auth.tagline">Practice English naturally</p>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen 1: Choose Goal -->
+    <div id="onboarding-goal" class="screen">
+        <div class="top-bar">
+            <div class="progress-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            <button class="btn-text skip-btn" data-i18n="common.skip">Skip</button>
+        </div>
+
+        <div class="content">
+            <h2 class="heading" data-i18n="onboarding.goal.title">What's your goal?</h2>
+            <p class="subheading" data-i18n="onboarding.goal.subtitle">Choose what you want to focus on</p>
+
+            <div class="goal-cards">
+                <div class="goal-card" data-goal="daily">
+                    <div class="goal-icon">💬</div>
+                    <div class="goal-text">
+                        <h3 data-i18n="onboarding.goal.daily.title">Daily Conversation</h3>
+                        <p data-i18n="onboarding.goal.daily.description">Chat about everyday topics</p>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="business">
+                    <div class="goal-icon">💼</div>
+                    <div class="goal-text">
+                        <h3 data-i18n="onboarding.goal.business.title">Business English</h3>
+                        <p data-i18n="onboarding.goal.business.description">Professional communication skills</p>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="travel">
+                    <div class="goal-icon">✈️</div>
+                    <div class="goal-text">
+                        <h3 data-i18n="onboarding.goal.travel.title">Travel</h3>
+                        <p data-i18n="onboarding.goal.travel.description">Essential phrases for travelers</p>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="exam">
+                    <div class="goal-icon">📚</div>
+                    <div class="goal-text">
+                        <h3 data-i18n="onboarding.goal.exam.title">Exam Prep</h3>
+                        <p data-i18n="onboarding.goal.exam.description">IELTS, TOEFL, and more</p>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="fluency">
+                    <div class="goal-icon">🎯</div>
+                    <div class="goal-text">
+                        <h3 data-i18n="onboarding.goal.fluency.title">General Fluency</h3>
+                        <p data-i18n="onboarding.goal.fluency.description">Improve overall speaking</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-action">
+            <button class="btn-primary" id="goal-continue" disabled data-i18n="common.continue">Continue</button>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen 2: Choose Level -->
+    <div id="onboarding-level" class="screen">
+        <div class="top-bar">
+            <div class="progress-dots">
+                <span class="dot"></span>
+                <span class="dot active"></span>
+                <span class="dot"></span>
+            </div>
+            <button class="btn-text skip-btn" data-i18n="common.skip">Skip</button>
+        </div>
+
+        <div class="content">
+            <h2 class="heading" data-i18n="onboarding.level.title">What's your level?</h2>
+            <p class="subheading" data-i18n="onboarding.level.subtitle">We'll adjust the difficulty for you</p>
+
+            <div class="level-slider">
+                <input type="range" min="0" max="4" value="2" id="level-range" step="1">
+                <div class="level-labels">
+                    <span data-i18n="onboarding.level.labels.beginner">Beginner</span>
+                    <span data-i18n="onboarding.level.labels.elementary">Elementary</span>
+                    <span data-i18n="onboarding.level.labels.intermediate">Intermediate</span>
+                    <span data-i18n="onboarding.level.labels.upperIntermediate">Upper-Int</span>
+                    <span data-i18n="onboarding.level.labels.advanced">Advanced</span>
+                </div>
+            </div>
+
+            <div class="level-card" id="level-description">
+                <div class="level-badge">🎓</div>
+                <h3 id="level-title">Intermediate</h3>
+                <p id="level-desc">You can: Discuss familiar topics, express opinions, understand most conversations</p>
+            </div>
+        </div>
+
+        <div class="bottom-action">
+            <button class="btn-primary" id="level-continue" data-i18n="common.continue">Continue</button>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen 3: Preferences -->
+    <div id="onboarding-preferences" class="screen">
+        <div class="top-bar">
+            <div class="progress-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot active"></span>
+            </div>
+            <button class="btn-text skip-btn" data-i18n="common.skip">Skip</button>
+        </div>
+
+        <div class="content">
+            <h2 class="heading" data-i18n="onboarding.preferences.title">Customize your experience</h2>
+            <p class="subheading" data-i18n="onboarding.preferences.subtitle">You can change these anytime in Settings
+            </p>
+
+            <div class="preference-cards">
+                <div class="preference-card">
+                    <h4 data-i18n="onboarding.preferences.mode.title">How do you want to practice?</h4>
+                    <div class="segmented-control">
+                        <input type="radio" name="mode" id="mode-voice" value="voice">
+                        <label for="mode-voice">
+                            <span class="icon">🎤</span>
+                            <span data-i18n="onboarding.preferences.mode.voice">Voice</span>
+                        </label>
+
+                        <input type="radio" name="mode" id="mode-text" value="text">
+                        <label for="mode-text">
+                            <span class="icon">⌨️</span>
+                            <span data-i18n="onboarding.preferences.mode.text">Text</span>
+                        </label>
+
+                        <input type="radio" name="mode" id="mode-both" value="both" checked>
+                        <label for="mode-both">
+                            <span class="icon">🎤⌨️</span>
+                            <span data-i18n="onboarding.preferences.mode.both">Both</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="preference-card">
+                    <div class="preference-item">
+                        <div class="preference-info">
+                            <h4 data-i18n="onboarding.preferences.hints.title">Show hints during conversation</h4>
+                            <p data-i18n="onboarding.preferences.hints.description">Get suggestions when you're stuck
+                            </p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="show-hints" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="preference-card">
+                    <div class="preference-item">
+                        <div class="preference-info">
+                            <h4 data-i18n="onboarding.preferences.slow.title">Start with slower AI responses</h4>
+                            <p data-i18n="onboarding.preferences.slow.description">AI will speak slower and use simpler
+                                words</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="slow-mode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-action">
+            <button class="btn-primary" id="preferences-start" data-i18n="onboarding.preferences.start">Get
+                Started</button>
+        </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home" class="screen">
+        <div class="top-bar">
+            <h2 class="greeting" data-i18n="home.greeting.generic">Hi, there! 👋</h2>
+            <div class="profile-avatar">
+                <span>U</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Streak Card -->
+            <div class="streak-card">
+                <div class="streak-info">
+                    <div class="streak-icon">🔥</div>
+                    <div>
+                        <h3 data-i18n="home.streak.title">Daily Streak</h3>
+                        <p data-i18n="home.streak.subtitle">Keep it going!</p>
+                    </div>
+                </div>
+                <div class="streak-number">
+                    <span class="number">7</span>
+                    <span class="label" data-i18n="home.streak.days">days</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%"></div>
+                </div>
+                <p class="progress-label" data-i18n="home.streak.progress">2/5 sessions today</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card" data-action="start-conversation">
+                    <div class="action-icon">💬</div>
+                    <h4 data-i18n="home.actions.start.title">Start Conversation</h4>
+                    <p data-i18n="home.actions.start.description">Practice speaking now</p>
+                </div>
+
+                <div class="action-card voice-practice" data-action="voice-practice">
+                    <div class="action-icon">🎤</div>
+                    <h4 data-i18n="home.actions.voice.title">Voice Practice</h4>
+                    <p data-i18n="home.actions.voice.description">Speak with AI</p>
+                </div>
+
+                <div class="action-card daily-topic" data-action="daily-topic">
+                    <div class="badge" data-i18n="home.actions.daily.badge">New</div>
+                    <div class="action-icon">⭐</div>
+                    <h4 data-i18n="home.actions.daily.title">Daily Topic</h4>
+                    <p data-i18n="home.actions.daily.description">Today: Ordering Coffee</p>
+                </div>
+
+                <div class="action-card" data-action="flashcards">
+                    <div class="action-icon">🃏</div>
+                    <h4 data-i18n="home.actions.flashcards.title">Flashcards</h4>
+                    <p data-i18n="home.actions.flashcards.description">12 to review</p>
+                </div>
+
+                <div class="action-card" data-action="history">
+                    <div class="action-icon">🕐</div>
+                    <h4 data-i18n="home.actions.history.title">History</h4>
+                    <p data-i18n="home.actions.history.description">15 sessions</p>
+                </div>
+
+                <div class="action-card" data-action="settings">
+                    <div class="action-icon">⚙️</div>
+                    <h4 data-i18n="home.actions.settings.title">Settings</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#home" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label" data-i18n="nav.home">Home</span>
+            </a>
+            <a href="#practice" class="nav-item">
+                <span class="nav-icon">📝</span>
+                <span class="nav-label" data-i18n="nav.practice">Practice</span>
+            </a>
+            <a href="#flashcards" class="nav-item">
+                <span class="nav-icon">🃏</span>
+                <span class="nav-label" data-i18n="nav.cards">Cards</span>
+            </a>
+            <a href="#history" class="nav-item">
+                <span class="nav-icon">🕐</span>
+                <span class="nav-label" data-i18n="nav.history">History</span>
+            </a>
+            <a href="#settings" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label" data-i18n="nav.settings">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Topic Library -->
+    <div id="topic-library" class="screen">
+        <div class="library-container">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="btn-icon" id="back-from-library">
+                    <span>←</span>
+                </button>
+                <h2 class="screen-title" data-i18n="topics.title">Topics</h2>
+                <button class="btn-icon" id="toggle-search">
+                    <span>🔍</span>
+                </button>
+            </div>
+
+            <!-- Search Bar (expandable) -->
+            <div class="search-bar" id="search-bar" style="display: none;">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="topic-search" placeholder="Search topics..."
+                    data-i18n-placeholder="topics.search.placeholder" />
+                <button class="btn-clear" id="clear-search" style="display: none;">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <!-- Category Chips -->
+            <div class="category-chips" id="category-chips">
+                <div class="category-chip active" data-category="all" data-i18n="topics.categories.all">All</div>
+                <div class="category-chip" data-category="daily" data-i18n="topics.categories.daily">Daily Life</div>
+                <div class="category-chip" data-category="business" data-i18n="topics.categories.business">Business
+                </div>
+                <div class="category-chip" data-category="travel" data-i18n="topics.categories.travel">Travel</div>
+                <div class="category-chip" data-category="culture" data-i18n="topics.categories.culture">Culture</div>
+                <div class="category-chip" data-category="grammar" data-i18n="topics.categories.grammar">Grammar</div>
+                <div class="category-chip" data-category="vocabulary" data-i18n="topics.categories.vocabulary">
+                    Vocabulary</div>
+            </div>
+
+            <!-- Topic Grid -->
+            <div class="topic-grid" id="topic-grid">
+                <!-- Topic Card 1 -->
+                <div class="topic-card" data-topic="ordering-coffee" data-category="daily" data-level="beginner">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">☕</div>
+                        <div class="difficulty-badge beginner">B</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.orderingCoffee.title">Ordering Coffee</h3>
+                    <p class="topic-description" data-i18n="topics.cards.orderingCoffee.description">Practice ordering
+                        drinks and food at a café</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.beginner">Beginner</span>
+                        <span class="tag" data-i18n="topics.time.5_10">5-10 min</span>
+                    </div>
+                    <div class="topic-mode-buttons">
+                        <button class="topic-mode-btn text-mode" data-mode="text">
+                            <span class="mode-icon">💬</span>
+                            <span class="mode-label">Text</span>
+                        </button>
+                        <button class="topic-mode-btn voice-mode" data-mode="voice">
+                            <span class="mode-icon">🎤</span>
+                            <span class="mode-label">Voice</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Topic Card 2 -->
+                <div class="topic-card" data-topic="job-interview" data-category="business" data-level="intermediate">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">💼</div>
+                        <div class="difficulty-badge intermediate">I</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.jobInterview.title">Job Interview</h3>
+                    <p class="topic-description" data-i18n="topics.cards.jobInterview.description">Prepare for common
+                        interview questions and answers</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.intermediate">Intermediate</span>
+                        <span class="tag" data-i18n="topics.time.10_15">10-15 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 3 -->
+                <div class="topic-card" data-topic="airport-checkin" data-category="travel" data-level="beginner">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">✈️</div>
+                        <div class="difficulty-badge beginner">B</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.airportCheckin.title">Airport Check-in</h3>
+                    <p class="topic-description" data-i18n="topics.cards.airportCheckin.description">Navigate airport
+                        procedures and check-in conversations</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.beginner">Beginner</span>
+                        <span class="tag" data-i18n="topics.time.5_10">5-10 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 4 -->
+                <div class="topic-card" data-topic="making-friends" data-category="daily" data-level="beginner">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">👋</div>
+                        <div class="difficulty-badge beginner">B</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.makingFriends.title">Making Friends</h3>
+                    <p class="topic-description" data-i18n="topics.cards.makingFriends.description">Start conversations
+                        and make new friends</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.beginner">Beginner</span>
+                        <span class="tag" data-i18n="topics.time.5_10">5-10 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 5 -->
+                <div class="topic-card" data-topic="business-presentation" data-category="business"
+                    data-level="advanced">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">📊</div>
+                        <div class="difficulty-badge advanced">A</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.businessPresentation.title">Business Presentation
+                    </h3>
+                    <p class="topic-description" data-i18n="topics.cards.businessPresentation.description">Deliver
+                        professional presentations with confidence</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.advanced">Advanced</span>
+                        <span class="tag" data-i18n="topics.time.15_20">15-20 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 6 -->
+                <div class="topic-card" data-topic="hotel-booking" data-category="travel" data-level="intermediate">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">🏨</div>
+                        <div class="difficulty-badge intermediate">I</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.hotelBooking.title">Hotel Booking</h3>
+                    <p class="topic-description" data-i18n="topics.cards.hotelBooking.description">Reserve rooms and ask
+                        about hotel amenities</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.intermediate">Intermediate</span>
+                        <span class="tag" data-i18n="topics.time.10_15">10-15 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 7 -->
+                <div class="topic-card" data-topic="small-talk" data-category="daily" data-level="beginner">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">💬</div>
+                        <div class="difficulty-badge beginner">B</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.smallTalk.title">Small Talk</h3>
+                    <p class="topic-description" data-i18n="topics.cards.smallTalk.description">Master casual
+                        conversations about weather, hobbies, and more</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.beginner">Beginner</span>
+                        <span class="tag" data-i18n="topics.time.5_10">5-10 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 8 -->
+                <div class="topic-card" data-topic="phone-calls" data-category="business" data-level="intermediate">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">📞</div>
+                        <div class="difficulty-badge intermediate">I</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.phoneCalls.title">Phone Calls</h3>
+                    <p class="topic-description" data-i18n="topics.cards.phoneCalls.description">Handle professional
+                        phone conversations effectively</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.intermediate">Intermediate</span>
+                        <span class="tag" data-i18n="topics.time.10_15">10-15 min</span>
+                    </div>
+                </div>
+
+                <!-- Topic Card 9 -->
+                <div class="topic-card" data-topic="restaurant" data-category="daily" data-level="beginner">
+                    <div class="topic-card-header">
+                        <div class="topic-icon">🍽️</div>
+                        <div class="difficulty-badge beginner">B</div>
+                    </div>
+                    <h3 class="topic-title" data-i18n="topics.cards.restaurant.title">At the Restaurant</h3>
+                    <p class="topic-description" data-i18n="topics.cards.restaurant.description">Order food, ask
+                        questions, and pay the bill</p>
+                    <div class="topic-tags">
+                        <span class="tag" data-i18n="topics.level.beginner">Beginner</span>
+                        <span class="tag" data-i18n="topics.time.5_10">5-10 min</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (hidden by default) -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-icon">🔍❌</div>
+                <h3 class="empty-title" data-i18n="topics.empty.title">No topics found</h3>
+                <p class="empty-subtitle" data-i18n="topics.empty.subtitle">Try a different search term</p>
+                <button class="btn-text" id="clear-search-empty" data-i18n="topics.empty.clear">Clear search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings" class="screen">
+        <div class="settings-container">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button type="button" class="btn-icon" id="back-from-settings">
+                    <span>←</span>
+                </button>
+                <h2 class="screen-title" data-i18n="settings.title">Settings</h2>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </div>
+
+            <div class="settings-content">
+                <!-- Profile Section -->
+                <section class="settings-section">
+                    <h3 class="section-heading" data-i18n="settings.section.profile">Profile</h3>
+                    <div class="profile-card">
+                        <div class="profile-avatar-container">
+                            <div class="profile-avatar">
+                                <span id="avatar-initials">U</span>
+                            </div>
+                            <button class="avatar-edit-btn">
+                                <span>📷</span>
+                            </button>
+                        </div>
+
+                        <div class="profile-field">
+                            <label for="profile-name" data-i18n="settings.profile.name">Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="profile-name" value="User" />
+                            </div>
+                        </div>
+
+                        <div class="profile-field">
+                            <label for="profile-email" data-i18n="settings.profile.email">Email</label>
+                            <div class="input-wrapper">
+                                <input type="email" id="profile-email" value="user@example.com" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Preferences Section -->
+                <section class="settings-section">
+                    <h3 class="section-heading" data-i18n="settings.section.preferences">Preferences</h3>
+
+                    <!-- Preferred Mode -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🎤</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.mode">Preferred Mode</h4>
+                        </div>
+                        <div class="segmented-control-small">
+                            <input type="radio" name="pref-mode" id="pref-voice" value="voice">
+                            <label for="pref-voice" data-i18n="settings.pref.mode.voice">Voice</label>
+
+                            <input type="radio" name="pref-mode" id="pref-text" value="text">
+                            <label for="pref-text" data-i18n="settings.pref.mode.text">Text</label>
+
+                            <input type="radio" name="pref-mode" id="pref-both" value="both" checked>
+                            <label for="pref-both" data-i18n="settings.pref.mode.both">Both</label>
+                        </div>
+                    </div>
+
+                    <!-- Show Hints -->
+                    <div class="setting-item">
+                        <div class="setting-icon">💡</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.hints.label">Show Hints</h4>
+                            <p class="setting-description" data-i18n="settings.pref.hints.description">Get suggestions
+                                during conversations</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-hints" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Slow Mode -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🐢</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.slow.label">Slow Mode</h4>
+                            <p class="setting-description" data-i18n="settings.pref.slow.description">AI speaks slower
+                                with simpler words</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-slow-mode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Dark Mode -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🌙</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.dark.label">Dark Mode</h4>
+                            <p class="setting-description" data-i18n="settings.pref.dark.description">Switch to dark
+                                theme</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-dark-mode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Daily Reminder -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🔔</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.reminder.label">Daily Reminder</h4>
+                            <p class="setting-description" data-i18n="settings.pref.reminder.description">Get reminded
+                                to practice</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-reminder">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Language -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🌐</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.pref.language.label">App Language</h4>
+                            <p class="setting-description" data-i18n="settings.pref.language.description">Choose your
+                                language</p>
+                        </div>
+                        <select id="setting-language" class="setting-select"
+                            data-i18n-aria="settings.pref.language.label">
+                            <option value="en" data-i18n="settings.pref.language.option.en">English</option>
+                            <option value="vi" data-i18n="settings.pref.language.option.vi">Tiếng Việt</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Privacy Section -->
+                <section class="settings-section">
+                    <h3 class="section-heading" data-i18n="settings.section.privacy">Privacy</h3>
+
+                    <!-- Save Recordings -->
+                    <div class="setting-item">
+                        <div class="setting-icon">🎙️</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.privacy.recordings.label">Save Voice
+                                Recordings</h4>
+                            <p class="setting-description" data-i18n="settings.privacy.recordings.description">Store
+                                recordings for review</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-save-recordings" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Analytics -->
+                    <div class="setting-item">
+                        <div class="setting-icon">📊</div>
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.privacy.analytics.label">Share Usage Data</h4>
+                            <p class="setting-description" data-i18n="settings.privacy.analytics.description">Help
+                                improve the app</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="setting-analytics" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- About Section -->
+                <section class="settings-section">
+                    <h3 class="section-heading" data-i18n="settings.section.about">About</h3>
+
+                    <div class="setting-item clickable" id="privacy-policy">
+                        <div class="setting-info">
+                            <h4 class="setting-label-link" data-i18n="settings.about.privacyPolicy">Privacy Policy</h4>
+                        </div>
+                        <span class="chevron">›</span>
+                    </div>
+
+                    <div class="setting-item clickable" id="terms-service">
+                        <div class="setting-info">
+                            <h4 class="setting-label-link" data-i18n="settings.about.terms">Terms of Service</h4>
+                        </div>
+                        <span class="chevron">›</span>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4 class="setting-label" data-i18n="settings.about.version">Version</h4>
+                            <p class="setting-description">1.0.0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Account Section -->
+                <section class="settings-section">
+                    <h3 class="section-heading" data-i18n="settings.section.account">Account</h3>
+
+                    <button class="btn-logout" id="btn-logout">
+                        <span>🚪</span>
+                        <span class="btn-label" data-i18n="settings.account.logout">Logout</span>
+                    </button>
+
+                    <button class="btn-text-danger" id="btn-delete-account" data-i18n="settings.account.delete">
+                        Delete Account
+                    </button>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logout-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-icon">🚪</div>
+            <h3 class="modal-title" data-i18n="settings.modal.logout.title">Logout?</h3>
+            <p class="modal-text" data-i18n="settings.modal.logout.text">Are you sure you want to logout?</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancel-logout"
+                    data-i18n="settings.modal.logout.cancel">Cancel</button>
+                <button class="btn-primary" id="confirm-logout"
+                    data-i18n="settings.modal.logout.confirm">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal-overlay" id="delete-account-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-icon warning">⚠️</div>
+            <h3 class="modal-title" data-i18n="settings.modal.delete.title">Delete Account?</h3>
+            <p class="modal-text" data-i18n="settings.modal.delete.text">This action cannot be undone. All your data
+                will be permanently deleted.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancel-delete"
+                    data-i18n="settings.modal.delete.cancel">Cancel</button>
+                <button class="btn-primary" style="background: var(--error);" id="confirm-delete"
+                    data-i18n="settings.modal.delete.confirm">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Call Screen (Streaming Audio Mode) -->
+    <div id="voice-call" class="screen">
+        <div class="voice-call-container">
+            <!-- Top Bar -->
+            <div class="voice-top-bar">
+                <button class="btn-back-voice" id="back-from-voice">
+                    <span>←</span>
+                </button>
+                <div class="call-info">
+                    <h3 class="call-title" data-i18n="topics.cards.orderingCoffee.title">Ordering Coffee</h3>
+                    <p class="call-subtitle" data-i18n="voice.call.subtitle">AI Conversation Partner</p>
+                </div>
+                <button class="btn-icon-voice" id="voice-menu">
+                    <span>⋮</span>
+                </button>
+            </div>
+
+            <!-- Main Voice Area -->
+            <div class="voice-main">
+                <!-- Session Timer -->
+                <div class="session-timer">
+                    <span id="voice-timer">00:24</span>
+                </div>
+
+                <!-- Avatar with Audio Visualization -->
+                <div class="voice-avatar-container">
+                    <!-- Outer rings (pulsing when speaking) -->
+                    <div class="voice-ring ring-1"></div>
+                    <div class="voice-ring ring-2"></div>
+                    <div class="voice-ring ring-3"></div>
+
+                    <!-- Avatar circle -->
+                    <div class="voice-avatar">
+                        <div class="avatar-inner">
+                            <span class="avatar-icon">🤖</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Text -->
+                <div class="voice-status">
+                    <p class="status-text" id="voice-status-text" data-i18n="voice.status.listening">Listening...</p>
+                    <p class="status-hint" id="voice-status-hint" data-i18n="voice.status.hint">Speak naturally</p>
+                </div>
+
+                <!-- Live Transcript (optional, can be hidden) -->
+                <div class="live-transcript" id="live-transcript">
+                    <p class="transcript-label" data-i18n="voice.transcript.label">You said:</p>
+                    <p class="transcript-text" id="transcript-text" data-i18n="voice.transcript.sample">I'd like a large
+                        cappuccino, please.</p>
+                </div>
+            </div>
+
+            <!-- Bottom Controls -->
+            <div class="voice-controls">
+                <button class="btn-control mute" id="btn-mute" title="Mute" data-i18n-title="voice.controls.mute">
+                    <span class="control-icon">🎤</span>
+                    <span class="control-label" data-i18n="voice.controls.mute">Mute</span>
+                </button>
+
+                <button class="btn-control end-call" id="btn-end-call" title="End call"
+                    data-i18n-title="voice.controls.end">
+                    <span class="control-icon">📞</span>
+                    <span class="control-label" data-i18n="voice.controls.end">End call</span>
+                </button>
+
+                <button class="btn-control switch-mode" id="btn-switch-text" title="Switch to text"
+                    data-i18n-title="voice.controls.switch_text">
+                    <span class="control-icon">💬</span>
+                    <span class="control-label" data-i18n="voice.controls.text">Text</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Chat Screen (Text-only Mode) -->
+    <div id="text-chat" class="screen">
+        <div class="conversation-container">
+            <!-- Top Bar -->
+            <div class="top-bar conversation-top">
+                <button class="btn-icon" id="end-conversation">
+                    <span>✕</span>
+                </button>
+                <div class="topic-info">
+                    <h3 class="topic-title" data-i18n="topics.cards.orderingCoffee.title">Ordering Coffee</h3>
+                    <span class="session-time">00:00</span>
+                </div>
+                <button class="btn-icon" id="conversation-menu">
+                    <span>⋮</span>
+                </button>
+            </div>
+
+            <!-- Chat Messages Area -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- System Message -->
+                <div class="message-wrapper system">
+                    <div class="message system-message">
+                        <span data-i18n="chat.system.started">Session started • Hints enabled</span>
+                    </div>
+                </div>
+
+                <!-- AI Message -->
+                <div class="message-wrapper ai">
+                    <div class="message ai-message">
+                        <div class="message-content">
+                            <p data-i18n="chat.sample.ai_message">Hello! I'm your AI conversation partner. Let's
+                                practice ordering coffee at a café. I'll
+                                be the barista. What would you like to order?</p>
+                        </div>
+                        <div class="message-meta">
+                            <span class="timestamp" data-i18n="common.just_now">Just now</span>
+                        </div>
+                        <button class="audio-play-btn">
+                            <span class="play-icon">▶️</span>
+                            <span class="duration">0:08</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator (hidden by default) -->
+                <div class="message-wrapper ai typing-indicator" style="display: none;">
+                    <div class="message ai-message">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hint Chips (above input) -->
+            <div class="hint-chips" id="hint-chips">
+                <div class="hint-chip">I'd like to...</div>
+                <div class="hint-chip">Can I have...</div>
+                <div class="hint-chip">Could you...</div>
+                <div class="hint-chip">What do you recommend?</div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-bar" id="input-bar">
+                <button class="btn-help" id="btn-help" title="Help me say this" data-i18n-title="chat.help.title">
+                    <span>🌐</span>
+                </button>
+
+                <div class="input-wrapper-chat">
+                    <textarea id="message-input" placeholder="Type your message or tap mic to speak..."
+                        data-i18n-placeholder="chat.input.placeholder" rows="1"></textarea>
+                </div>
+
+                <button class="btn-mic" id="btn-mic" title="Record voice" data-i18n-title="chat.input.record">
+                    <span class="mic-icon">🎤</span>
+                </button>
+            </div>
+
+            <!-- Voice Recording Indicator (overlay) -->
+            <div class="voice-recording-overlay" id="voice-recording" style="display: none;">
+                <div class="recording-content">
+                    <div class="recording-animation">
+                        <div class="pulse-ring"></div>
+                        <div class="mic-circle">
+                            <span>🎤</span>
+                        </div>
+                    </div>
+                    <p class="recording-text" data-i18n="chat.recording.listening">Listening...</p>
+                    <p class="recording-time" id="recording-time">00:00</p>
+                    <button class="btn-stop-recording" id="btn-stop-recording">
+                        <span>⏹️</span>
+                        <span class="btn-label" data-i18n="chat.recording.stop">Stop</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Me Say This Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="help-sheet-overlay" style="display: none;">
+        <div class="bottom-sheet" id="help-sheet">
+            <div class="sheet-handle"></div>
+
+            <div class="sheet-header">
+                <h3 data-i18n="chat.help.title">Help Me Say This</h3>
+                <button class="btn-close-sheet" id="close-help-sheet">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <div class="sheet-content">
+                <div class="input-group">
+                    <label for="vietnamese-input" data-i18n="chat.help.label">What do you want to say? (in
+                        Vietnamese)</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">💬</span>
+                        <textarea id="vietnamese-input" placeholder="Nhập tiếng Việt..."
+                            data-i18n-placeholder="chat.help.placeholder" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="generate-suggestions">
+                    <span>✨</span>
+                    <span class="btn-label" data-i18n="chat.help.generate">Generate Suggestions</span>
+                </button>
+
+                <!-- Loading State -->
+                <div class="suggestions-loading" id="suggestions-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p data-i18n="chat.help.generating">Generating suggestions...</p>
+                </div>
+
+                <!-- Suggestions -->
+                <div class="suggestions-container" id="suggestions-container" style="display: none;">
+                    <h4 data-i18n="chat.help.choose">Choose a style:</h4>
+
+                    <div class="suggestion-card casual">
+                        <div class="suggestion-header">
+                            <span class="badge" data-i18n="chat.help.style.casual">Casual</span>
+                            <span class="tone-icon">😊</span>
+                        </div>
+                        <p class="suggestion-text" id="suggestion-casual" data-i18n="chat.sample.suggestion.casual">Hey,
+                            can I get a coffee?</p>
+                        <button class="btn-use-suggestion" data-suggestion="casual" data-i18n="chat.help.use">
+                            Use This
+                        </button>
+                    </div>
+
+                    <div class="suggestion-card neutral">
+                        <div class="suggestion-header">
+                            <span class="badge" data-i18n="chat.help.style.neutral">Neutral</span>
+                            <span class="tone-icon">🙂</span>
+                        </div>
+                        <p class="suggestion-text" id="suggestion-neutral" data-i18n="chat.sample.suggestion.neutral">
+                            I'd like to order a coffee, please.</p>
+                        <button class="btn-use-suggestion" data-suggestion="neutral" data-i18n="chat.help.use">
+                            Use This
+                        </button>
+                    </div>
+
+                    <div class="suggestion-card polite">
+                        <div class="suggestion-header">
+                            <span class="badge" data-i18n="chat.help.style.polite">Polite</span>
+                            <span class="tone-icon">😌</span>
+                        </div>
+                        <p class="suggestion-text" id="suggestion-polite" data-i18n="chat.sample.suggestion.polite">
+                            Could I please have a coffee? Thank you.</p>
+                        <button class="btn-use-suggestion" data-suggestion="polite" data-i18n="chat.help.use">
+                            Use This
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- End Session Confirmation Modal -->
+    <div class="modal-overlay" id="end-session-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-icon warning">⚠️</div>
+            <h3 class="modal-title" data-i18n="chat.end.title">End Session?</h3>
+            <p class="modal-text" data-i18n="chat.end.text">Your conversation will be saved and analyzed. You'll get a
+                detailed report.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancel-end-session" data-i18n="chat.end.cancel">Keep Talking</button>
+                <button class="btn-primary" id="confirm-end-session" data-i18n="chat.end.confirm">End Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI & Voice Services (Load first) -->
+    <script src="js/gemini-service.js"></script>
+    <script src="js/voice-service.js"></script>
+    <script src="js/topic-mode-buttons.js"></script>
+    <script src="js/i18n.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/settings.js"></script>
+    <script src="js/topic-library.js"></script>
+    <script src="js/voice-call.js"></script>
+    <script src="js/conversation.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

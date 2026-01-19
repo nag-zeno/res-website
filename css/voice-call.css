@@ -1,0 +1,371 @@
+/* ========================================
+   VOICE CALL SCREEN (Streaming Audio Mode)
+   ======================================== */
+
+.voice-call-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-primary);
+}
+
+/* Top Bar */
+.voice-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    min-height: 56px;
+}
+
+.btn-back-voice,
+.btn-icon-voice {
+    width: 40px;
+    height: 40px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-raised-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text-primary);
+    transition: all var(--transition-base);
+}
+
+.btn-back-voice:hover,
+.btn-icon-voice:hover {
+    box-shadow: var(--shadow-raised);
+    transform: scale(1.05);
+}
+
+.btn-back-voice:active,
+.btn-icon-voice:active {
+    box-shadow: var(--shadow-inset-sm);
+    transform: scale(0.95);
+}
+
+.call-info {
+    flex: 1;
+    text-align: center;
+}
+
+.call-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.call-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Main Voice Area */
+.voice-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
+    position: relative;
+}
+
+/* Session Timer */
+.session-timer {
+    position: absolute;
+    top: var(--space-lg);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.session-timer span {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Avatar Container with Rings */
+.voice-avatar-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-bottom: var(--space-2xl);
+}
+
+/* Pulsing Rings */
+.voice-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid var(--accent-secondary);
+    opacity: 0;
+}
+
+.voice-ring.ring-1 {
+    width: 100%;
+    height: 100%;
+    animation: voiceRingPulse 2s ease-out infinite;
+}
+
+.voice-ring.ring-2 {
+    width: 100%;
+    height: 100%;
+    animation: voiceRingPulse 2s ease-out infinite 0.4s;
+}
+
+.voice-ring.ring-3 {
+    width: 100%;
+    height: 100%;
+    animation: voiceRingPulse 2s ease-out infinite 0.8s;
+}
+
+@keyframes voiceRingPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0;
+    }
+}
+
+/* When AI is speaking, make rings more active */
+.voice-avatar-container.speaking .voice-ring {
+    border-color: var(--accent-primary);
+    animation-duration: 1.5s;
+}
+
+/* Avatar Circle */
+.voice-avatar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140px;
+    height: 140px;
+    background: var(--surface);
+    border-radius: 50%;
+    box-shadow: var(--shadow-raised-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.avatar-inner {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #A8C5FF 0%, #6C8EEF 100%);
+    border-radius: 50%;
+    box-shadow: var(--shadow-inset-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-icon {
+    font-size: 64px;
+}
+
+/* When user is speaking, add subtle glow */
+.voice-avatar-container.user-speaking .voice-avatar {
+    box-shadow: var(--shadow-raised-lg), 0 0 20px rgba(108, 142, 239, 0.3);
+}
+
+/* Status Text */
+.voice-status {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.status-text {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.status-hint {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Live Transcript */
+.live-transcript {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised-sm);
+    padding: var(--space-md) var(--space-lg);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.live-transcript.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.transcript-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.transcript-text {
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* Bottom Controls */
+.voice-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-xl) var(--space-lg);
+    background: var(--bg-primary);
+}
+
+.btn-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised-sm);
+    transition: all var(--transition-base);
+    min-width: 80px;
+}
+
+.btn-control:hover {
+    box-shadow: var(--shadow-raised);
+    transform: translateY(-2px);
+}
+
+.btn-control:active {
+    box-shadow: var(--shadow-inset-sm);
+    transform: scale(0.95);
+}
+
+.control-icon {
+    font-size: 24px;
+}
+
+.control-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Mute Button - Active State */
+.btn-control.mute.active {
+    background: var(--error);
+    color: var(--text-inverse);
+}
+
+.btn-control.mute.active .control-label {
+    color: var(--text-inverse);
+}
+
+/* End Call Button - Danger Style */
+.btn-control.end-call {
+    background: var(--error);
+    color: var(--text-inverse);
+}
+
+.btn-control.end-call .control-label {
+    color: var(--text-inverse);
+}
+
+.btn-control.end-call:hover {
+    box-shadow: var(--shadow-raised-lg);
+}
+
+/* Switch Mode Button */
+.btn-control.switch-mode {
+    background: var(--accent-secondary);
+}
+
+/* Voice States */
+.voice-state-listening .status-text {
+    color: var(--accent-primary);
+}
+
+.voice-state-speaking .status-text {
+    color: var(--success);
+}
+
+.voice-state-thinking .status-text {
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .voice-avatar-container {
+        width: 240px;
+        height: 240px;
+    }
+
+    .voice-avatar {
+        width: 180px;
+        height: 180px;
+    }
+
+    .avatar-inner {
+        width: 160px;
+        height: 160px;
+    }
+
+    .avatar-icon {
+        font-size: 80px;
+    }
+}
+
+@media (max-width: 360px) {
+    .voice-avatar-container {
+        width: 160px;
+        height: 160px;
+    }
+
+    .voice-avatar {
+        width: 120px;
+        height: 120px;
+    }
+
+    .avatar-inner {
+        width: 100px;
+        height: 100px;
+    }
+
+    .avatar-icon {
+        font-size: 48px;
+    }
+
+    .voice-controls {
+        gap: var(--space-md);
+    }
+
+    .btn-control {
+        min-width: 70px;
+        padding: var(--space-sm);
+    }
+}
