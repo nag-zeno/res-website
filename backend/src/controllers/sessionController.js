@@ -48,7 +48,19 @@ exports.getSessions = async (req, res, next) => {
 
 exports.createSession = async (req, res, next) => {
     try {
-        const { topic, topicId, duration, messageCount, transcript, mistakes, vocabulary } = req.body;
+        const {
+            topic,
+            topicId,
+            duration,
+            messageCount,
+            transcript,
+            mistakes,
+            vocabulary,
+            createdAt,
+            migrate
+        } = req.body;
+
+        const createdAtDate = createdAt ? new Date(createdAt) : null;
 
         // Create session with related data
         const session = await prisma.session.create({
@@ -59,6 +71,9 @@ exports.createSession = async (req, res, next) => {
                 duration,
                 messageCount,
                 transcript,
+                ...(createdAtDate && !Number.isNaN(createdAtDate.getTime())
+                    ? { createdAt: createdAtDate }
+                    : {}),
                 mistakes: {
                     create: mistakes || []
                 },
@@ -72,15 +87,45 @@ exports.createSession = async (req, res, next) => {
             }
         });
 
-        // Update user profile stats
-        await prisma.profile.update({
-            where: { userId: req.user.id },
-            data: {
-                totalSessions: { increment: 1 },
-                totalMinutes: { increment: Math.floor(duration / 60) },
-                lastActiveAt: new Date()
+        if (migrate) {
+            await recalculateProfileStats(req.user.id);
+        } else {
+            // Update user profile stats + streak
+            const profile = await prisma.profile.findUnique({
+                where: { userId: req.user.id }
+            });
+
+            const now = new Date();
+            const today = new Date(now);
+            today.setHours(0, 0, 0, 0);
+
+            let nextStreak = profile?.streak || 0;
+            if (profile?.lastActiveAt) {
+                const lastActive = new Date(profile.lastActiveAt);
+                lastActive.setHours(0, 0, 0, 0);
+                const daysDiff = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff === 0) {
+                    nextStreak = profile.streak || 0;
+                } else if (daysDiff === 1) {
+                    nextStreak = (profile.streak || 0) + 1;
+                } else {
+                    nextStreak = 1;
+                }
+            } else {
+                nextStreak = 1;
             }
-        });
+
+            await prisma.profile.update({
+                where: { userId: req.user.id },
+                data: {
+                    totalSessions: { increment: 1 },
+                    totalMinutes: { increment: Math.floor(duration / 60) },
+                    lastActiveAt: now,
+                    streak: nextStreak
+                }
+            });
+        }
 
         res.status(201).json({
             message: 'Session created successfully',
@@ -91,6 +136,75 @@ exports.createSession = async (req, res, next) => {
         next(error);
     }
 };
+
+// ========================================
+// HELPER: RECALCULATE PROFILE STATS
+// ========================================
+
+function getDayKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseDayKey(key) {
+    const [year, month, day] = key.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+async function recalculateProfileStats(userId) {
+    const sessions = await prisma.session.findMany({
+        where: { userId },
+        select: {
+            createdAt: true,
+            duration: true
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    const totalSessions = sessions.length;
+    const totalMinutes = sessions.reduce(
+        (sum, session) => sum + Math.floor((session.duration || 0) / 60),
+        0
+    );
+
+    const lastActiveAt = sessions[0]?.createdAt || new Date();
+
+    const dayKeys = Array.from(
+        new Set(sessions.map((session) => getDayKey(new Date(session.createdAt))))
+    );
+
+    dayKeys.sort((a, b) => (a < b ? 1 : -1));
+
+    let streak = 0;
+    if (dayKeys.length) {
+        streak = 1;
+        let previousDate = parseDayKey(dayKeys[0]);
+        for (let i = 1; i < dayKeys.length; i += 1) {
+            const currentDate = parseDayKey(dayKeys[i]);
+            const diffDays = Math.round(
+                (previousDate - currentDate) / (1000 * 60 * 60 * 24)
+            );
+            if (diffDays === 1) {
+                streak += 1;
+                previousDate = currentDate;
+            } else {
+                break;
+            }
+        }
+    }
+
+    await prisma.profile.update({
+        where: { userId },
+        data: {
+            totalSessions,
+            totalMinutes,
+            lastActiveAt,
+            streak
+        }
+    });
+}
 
 // ========================================
 // GET SESSION BY ID

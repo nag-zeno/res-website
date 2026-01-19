@@ -11,11 +11,306 @@ let conversationState = {
     recordingTimer: null
 };
 
+const FLASHCARDS_STORAGE_KEY = 'guestFlashcards';
+const wordLookupState = {
+    term: '',
+    translation: '',
+    sourceText: ''
+};
+
 function t(key, fallback) {
     if (window.i18n && typeof window.i18n.translate === 'function') {
         return window.i18n.translate(key, fallback);
     }
     return fallback !== undefined ? fallback : key;
+}
+
+function tFormat(key, values, fallback) {
+    if (window.i18n && typeof window.i18n.format === 'function') {
+        return window.i18n.format(key, values, fallback);
+    }
+    return fallback !== undefined ? fallback : key;
+}
+
+function isAuthenticated() {
+    return typeof authManager !== 'undefined' && authManager.isLoggedIn();
+}
+
+function getTranslateTargetLanguage() {
+    const docLang = document.documentElement.lang || 'vi';
+    return docLang === 'en' ? 'vi' : docLang;
+}
+
+async function translateText(text) {
+    if (typeof apiService === 'undefined') {
+        throw new Error('Translation service unavailable');
+    }
+
+    const targetLanguage = getTranslateTargetLanguage();
+    const data = await apiService.translate(text, targetLanguage);
+    return data.translation;
+}
+
+function loadGuestFlashcards() {
+    const stored = localStorage.getItem(FLASHCARDS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+}
+
+function saveGuestFlashcards(cards) {
+    localStorage.setItem(FLASHCARDS_STORAGE_KEY, JSON.stringify(cards));
+}
+
+function saveGuestFlashcard(term, translation, sourceText) {
+    const normalizedTerm = term.trim().toLowerCase();
+    if (!normalizedTerm || !translation) return;
+
+    const cards = loadGuestFlashcards();
+    const existingIndex = cards.findIndex(
+        (card) => (card.term || '').toLowerCase() === normalizedTerm
+    );
+    const payload = {
+        id: cards[existingIndex]?.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `card_${Date.now()}`),
+        term: normalizedTerm,
+        translation: translation.trim(),
+        sourceText: sourceText || '',
+        createdAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        cards[existingIndex] = { ...cards[existingIndex], ...payload };
+    } else {
+        cards.unshift(payload);
+    }
+
+    saveGuestFlashcards(cards);
+}
+
+function createWordSpan(word) {
+    const span = document.createElement('span');
+    span.className = 'chat-word';
+    span.textContent = word;
+    span.dataset.word = word;
+    span.setAttribute('role', 'button');
+    span.tabIndex = 0;
+    return span;
+}
+
+function appendWordNodes(text, container, enableLookup) {
+    const wordRegex = /[A-Za-z]+(?:['’][A-Za-z]+)*/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = wordRegex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            container.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+
+        const word = match[0];
+        if (enableLookup) {
+            container.appendChild(createWordSpan(word));
+        } else {
+            container.appendChild(document.createTextNode(word));
+        }
+
+        lastIndex = wordRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+        container.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+}
+
+function buildMessageParagraph(text, enableLookup) {
+    const paragraph = document.createElement('p');
+    const lines = String(text || '').split(/\n/);
+
+    lines.forEach((line, index) => {
+        appendWordNodes(line, paragraph, enableLookup);
+        if (index < lines.length - 1) {
+            paragraph.appendChild(document.createElement('br'));
+        }
+    });
+
+    return paragraph;
+}
+
+function initWordLookup() {
+    const chatMessages = document.getElementById('chat-messages');
+    const modal = document.getElementById('word-lookup-modal');
+    const closeBtn = document.getElementById('word-lookup-close');
+    const saveBtn = document.getElementById('word-lookup-save');
+
+    if (!chatMessages || !modal || !closeBtn || !saveBtn) return;
+
+    chatMessages.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!target.classList.contains('chat-word')) return;
+
+        const messageEl = target.closest('.message');
+        const sourceText = messageEl?.dataset?.messageText || '';
+        openWordLookup(target.dataset.word, sourceText);
+    });
+
+    chatMessages.addEventListener('keydown', (event) => {
+        if (!event.target.classList.contains('chat-word')) return;
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            const target = event.target;
+            const messageEl = target.closest('.message');
+            const sourceText = messageEl?.dataset?.messageText || '';
+            openWordLookup(target.dataset.word, sourceText);
+        }
+    });
+
+    closeBtn.addEventListener('click', closeWordLookup);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeWordLookup();
+        }
+    });
+
+    saveBtn.addEventListener('click', saveWordToFlashcards);
+}
+
+async function openWordLookup(word, sourceText) {
+    const modal = document.getElementById('word-lookup-modal');
+    const termEl = document.getElementById('word-lookup-term');
+    const translationEl = document.getElementById('word-lookup-translation');
+    const saveBtn = document.getElementById('word-lookup-save');
+
+    const cleanWord = (word || '').trim();
+    if (!modal || !termEl || !translationEl || !saveBtn || !cleanWord) return;
+
+    wordLookupState.term = cleanWord;
+    wordLookupState.translation = '';
+    wordLookupState.sourceText = sourceText || '';
+
+    termEl.textContent = cleanWord;
+    translationEl.textContent = t('flashcards.lookup.loading', 'Translating...');
+    translationEl.classList.remove('is-error');
+    translationEl.classList.add('is-loading');
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = t('flashcards.lookup.save', 'Save to Flashcards');
+
+    modal.style.display = 'flex';
+
+    try {
+        const translation = await translateText(cleanWord);
+        if (translation) {
+            wordLookupState.translation = translation;
+            translationEl.textContent = translation;
+            saveBtn.disabled = false;
+        } else {
+            translationEl.textContent = t('flashcards.lookup.error', 'Unable to translate this word.');
+            translationEl.classList.add('is-error');
+        }
+    } catch (error) {
+        console.error('Word translate failed:', error);
+        translationEl.textContent = t('flashcards.lookup.error', 'Unable to translate this word.');
+        translationEl.classList.add('is-error');
+    } finally {
+        translationEl.classList.remove('is-loading');
+    }
+}
+
+function closeWordLookup() {
+    const modal = document.getElementById('word-lookup-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function saveWordToFlashcards() {
+    const saveBtn = document.getElementById('word-lookup-save');
+    const originalText = saveBtn?.textContent;
+
+    if (!wordLookupState.term || !wordLookupState.translation || !saveBtn) return;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = t('flashcards.lookup.saving', 'Saving...');
+
+    try {
+        if (isAuthenticated() && typeof apiService !== 'undefined') {
+            await apiService.addFlashcard({
+                term: wordLookupState.term,
+                translation: wordLookupState.translation,
+                sourceText: wordLookupState.sourceText
+            });
+        } else {
+            saveGuestFlashcard(
+                wordLookupState.term,
+                wordLookupState.translation,
+                wordLookupState.sourceText
+            );
+        }
+
+        showToast(t('flashcards.lookup.saved', 'Saved to Flashcards'), 'success');
+        if (typeof refreshFlashcards === 'function') {
+            refreshFlashcards();
+        }
+        closeWordLookup();
+    } catch (error) {
+        console.error('Failed to save flashcard:', error);
+        showToast(t('flashcards.lookup.save_failed', '⚠️ Could not save word'), 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText || t('flashcards.lookup.save', 'Save to Flashcards');
+    }
+}
+
+function saveGuestSession(sessionData) {
+    const key = 'guestSessions';
+    let sessions = [];
+
+    if (typeof loadFromStorage === 'function') {
+        sessions = loadFromStorage(key, []);
+    } else {
+        const stored = localStorage.getItem(key);
+        sessions = stored ? JSON.parse(stored) : [];
+    }
+
+    sessions.unshift(sessionData);
+
+    if (typeof saveToStorage === 'function') {
+        saveToStorage(key, sessions);
+    } else {
+        localStorage.setItem(key, JSON.stringify(sessions));
+    }
+}
+
+async function persistSession(sessionData) {
+    if (isAuthenticated() && typeof apiService !== 'undefined') {
+        try {
+            const durationSeconds = Math.floor((sessionData.duration || 0) / 1000);
+            await apiService.createSession({
+                topic: sessionData.topic || t('voice.call.free_title', 'Free Conversation'),
+                topicId: sessionData.topicId || null,
+                duration: durationSeconds,
+                messageCount: sessionData.messages?.length || 0,
+                transcript: sessionData.messages || []
+            });
+            if (window.SpeakEasyApp && typeof window.SpeakEasyApp.refreshUserStats === 'function') {
+                await window.SpeakEasyApp.refreshUserStats();
+            }
+            return true;
+        } catch (error) {
+            console.error('Failed to save session:', error);
+            showToast(t('chat.toast.save_failed', '⚠️ Failed to save session'), 'error');
+            return false;
+        }
+    }
+
+    saveGuestSession(sessionData);
+    if (typeof AppState !== 'undefined' && AppState.user) {
+        AppState.user.totalSessions = (AppState.user.totalSessions || 0) + 1;
+        AppState.user.sessionsToday = (AppState.user.sessionsToday || 0) + 1;
+    }
+    if (window.SpeakEasyApp && typeof window.SpeakEasyApp.updateStatsUI === 'function') {
+        window.SpeakEasyApp.updateStatsUI();
+    }
+    return true;
 }
 
 function initConversationRoom() {
@@ -25,6 +320,7 @@ function initConversationRoom() {
     initHelpSheet();
     initEndSession();
     initAudioPlayback();
+    initWordLookup();
 }
 
 // Chat Input
@@ -102,8 +398,10 @@ function addMessage(type, text, options = {}) {
     } else {
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.innerHTML = `<p>${text}</p>`;
+        const paragraph = buildMessageParagraph(text, type === 'ai');
+        content.appendChild(paragraph);
         message.appendChild(content);
+        message.dataset.messageText = text;
 
         const meta = document.createElement('div');
         meta.className = 'message-meta';
@@ -120,6 +418,60 @@ function addMessage(type, text, options = {}) {
             audioBtn.onclick = () => playAudio(audioBtn);
             message.appendChild(audioBtn);
         }
+
+        if (type === 'ai') {
+            const translateRow = document.createElement('div');
+            translateRow.className = 'message-translate';
+
+            const translateBtn = document.createElement('button');
+            translateBtn.type = 'button';
+            translateBtn.className = 'translate-btn';
+            translateBtn.textContent = t('chat.translate.action', 'Translate');
+
+            const translationEl = document.createElement('div');
+            translationEl.className = 'translation-text';
+            translationEl.style.display = 'none';
+
+            translateBtn.addEventListener('click', async () => {
+                const isVisible = translationEl.style.display !== 'none';
+                if (translationEl.dataset.translated === 'true' && isVisible) {
+                    translationEl.style.display = 'none';
+                    translateBtn.textContent = t('chat.translate.action', 'Translate');
+                    return;
+                }
+
+                if (translationEl.dataset.translated === 'true') {
+                    translationEl.style.display = 'block';
+                    translateBtn.textContent = t('chat.translate.hide', 'Hide translation');
+                    return;
+                }
+
+                translateBtn.disabled = true;
+                translateBtn.textContent = t('chat.translate.loading', 'Translating...');
+
+                try {
+                    const translation = await translateText(text);
+                    if (translation) {
+                        translationEl.textContent = translation;
+                        translationEl.dataset.translated = 'true';
+                        translationEl.style.display = 'block';
+                        translateBtn.textContent = t('chat.translate.hide', 'Hide translation');
+                    } else {
+                        translateBtn.textContent = t('chat.translate.action', 'Translate');
+                    }
+                } catch (error) {
+                    console.error('Translate failed:', error);
+                    showToast(t('chat.translate.failed', '⚠️ Translation failed'), 'error');
+                    translateBtn.textContent = t('chat.translate.action', 'Translate');
+                } finally {
+                    translateBtn.disabled = false;
+                }
+            });
+
+            translateRow.appendChild(translateBtn);
+            translateRow.appendChild(translationEl);
+            message.appendChild(translateRow);
+        }
     }
 
     messageWrapper.appendChild(message);
@@ -130,6 +482,31 @@ function addMessage(type, text, options = {}) {
 
     // Save to state
     conversationState.messages.push({ type, text, timestamp: new Date() });
+}
+
+function createSystemMessage() {
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = 'message-wrapper system';
+
+    const message = document.createElement('div');
+    message.className = 'message system-message';
+
+    const text = document.createElement('span');
+    text.setAttribute('data-i18n', 'chat.system.started');
+    text.textContent = t('chat.system.started', 'Session started • Hints enabled');
+
+    message.appendChild(text);
+    messageWrapper.appendChild(message);
+    return messageWrapper;
+}
+
+function resetChatMessages() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+
+    chatMessages.innerHTML = '';
+    chatMessages.appendChild(createSystemMessage());
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function showTypingIndicator() {
@@ -467,7 +844,10 @@ function initEndSession() {
     });
 }
 
-function endSession() {
+async function endSession() {
+    if (typeof AppState !== 'undefined' && AppState.currentScreen !== 'text-chat') {
+        return;
+    }
     const modal = document.getElementById('end-session-modal');
     modal.style.display = 'none';
 
@@ -479,6 +859,7 @@ function endSession() {
         messages: conversationState.messages,
         duration: Date.now() - conversationState.sessionStartTime,
         topic: conversationState.topic?.title || t('voice.call.free_title', 'Free Conversation'),
+        topicId: conversationState.topic?.id || null,
         timestamp: new Date()
     };
 
@@ -486,6 +867,8 @@ function endSession() {
 
     // Show success message
     showToast(t('chat.toast.saved', '✓ Session saved! Generating report...'), 'success');
+
+    await persistSession(sessionData);
 
     // Navigate to report (in real app)
     setTimeout(() => {
@@ -539,6 +922,15 @@ function updateSessionTime() {
 
 // Start conversation when screen is shown
 function startConversation(topicData = null) {
+    if (conversationState.sessionTimer) {
+        clearInterval(conversationState.sessionTimer);
+    }
+    if (conversationState.recordingTimer) {
+        clearInterval(conversationState.recordingTimer);
+    }
+
+    resetChatMessages();
+
     // Reset state
     conversationState = {
         messages: [],
@@ -551,11 +943,13 @@ function startConversation(topicData = null) {
     };
 
     // Update topic title in UI
-    const topicTitle = document.querySelector('.topic-title');
+    const topicTitle = document.querySelector('#text-chat .topic-title');
     if (topicTitle) {
         if (topicData && topicData.title) {
+            topicTitle.removeAttribute('data-i18n');
             topicTitle.textContent = topicData.title;
         } else {
+            topicTitle.setAttribute('data-i18n', 'voice.call.free_title');
             topicTitle.textContent = t('voice.call.free_title', 'Free Conversation');
         }
     }
@@ -566,6 +960,10 @@ function startConversation(topicData = null) {
         console.log('✅ Gemini AI initialized for:', topicData?.title || 'Free Conversation');
     } else {
         console.warn('⚠️ Gemini service not available');
+    }
+
+    if (window.RoleplayGoals && typeof window.RoleplayGoals.initTextGoals === 'function') {
+        window.RoleplayGoals.initTextGoals(topicData);
     }
 
     // Start timer

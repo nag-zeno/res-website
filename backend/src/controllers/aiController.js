@@ -2,7 +2,7 @@
 // AI CONTROLLER - GEMINI PROXY
 // ========================================
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
 // ========================================
 // CHAT
@@ -146,6 +146,63 @@ Start with a friendly greeting.`;
 
     } catch (error) {
         console.error('❌ Init conversation error:', error);
+        next(error);
+    }
+};
+
+// ========================================
+// TRANSLATE
+// ========================================
+
+exports.translate = async (req, res, next) => {
+    try {
+        const { text, targetLanguage = 'vi' } = req.body;
+
+        if (!text) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'Text is required'
+            });
+        }
+
+        const languageMap = {
+            vi: 'Vietnamese',
+            en: 'English'
+        };
+
+        const languageName = languageMap[targetLanguage] || 'Vietnamese';
+        const prompt = `Translate the following text to ${languageName}. Return only the translation without quotes.\n\nText:\n${text}`;
+
+        const response = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [{ text: prompt }]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.2,
+                    maxOutputTokens: 200
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'Gemini API request failed');
+        }
+
+        const data = await response.json();
+        const translation = data.candidates[0]?.content?.parts[0]?.text?.trim() || '';
+
+        res.json({ translation });
+    } catch (error) {
+        console.error('❌ Translate API error:', error);
         next(error);
     }
 };

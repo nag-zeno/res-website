@@ -112,12 +112,22 @@ exports.getStats = async (req, res, next) => {
             }
         });
 
+        const sessionsToday = await prisma.session.count({
+            where: {
+                userId: req.user.id,
+                createdAt: {
+                    gte: today
+                }
+            }
+        });
+
         res.json({
             stats: {
                 streak: currentStreak,
                 totalSessions: profile.totalSessions,
                 totalMinutes: profile.totalMinutes,
                 level: profile.level,
+                sessionsToday,
                 totalMistakes,
                 totalVocabulary,
                 recentActivity: recentSessions.map(s => ({

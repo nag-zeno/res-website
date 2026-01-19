@@ -2,7 +2,12 @@
 // API SERVICE - BACKEND INTEGRATION
 // ========================================
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL =
+    (typeof window !== 'undefined' &&
+        window.SPEAKEASY_CONFIG &&
+        window.SPEAKEASY_CONFIG.API_BASE_URL) ||
+    DEFAULT_API_BASE_URL;
 
 class ApiService {
     constructor() {
@@ -189,6 +194,35 @@ class ApiService {
         return await this.request('/ai/init-conversation', {
             method: 'POST',
             body: JSON.stringify({ topic })
+        });
+    }
+
+    async translate(text, targetLanguage = 'vi') {
+        return await this.request('/ai/translate', {
+            method: 'POST',
+            auth: false,
+            body: JSON.stringify({ text, targetLanguage })
+        });
+    }
+
+    // ========================================
+    // FLASHCARDS
+    // ========================================
+
+    async getFlashcards() {
+        return await this.request('/flashcards');
+    }
+
+    async addFlashcard({ term, translation, sourceText }) {
+        return await this.request('/flashcards', {
+            method: 'POST',
+            body: JSON.stringify({ term, translation, sourceText })
+        });
+    }
+
+    async deleteFlashcard(id) {
+        return await this.request(`/flashcards/${id}`, {
+            method: 'DELETE'
         });
     }
 

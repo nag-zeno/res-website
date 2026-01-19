@@ -20,9 +20,55 @@ function t(key, fallback) {
     return fallback !== undefined ? fallback : key;
 }
 
+function isAuthenticated() {
+    return typeof authManager !== 'undefined' && authManager.isLoggedIn();
+}
+
+function saveGuestSession(sessionData) {
+    const key = 'guestSessions';
+    const stored = localStorage.getItem(key);
+    const sessions = stored ? JSON.parse(stored) : [];
+    sessions.unshift(sessionData);
+    localStorage.setItem(key, JSON.stringify(sessions));
+}
+
+async function persistVoiceSession(sessionData) {
+    if (isAuthenticated() && typeof apiService !== 'undefined') {
+        try {
+            const durationSeconds = Math.floor((sessionData.duration || 0) / 1000);
+            await apiService.createSession({
+                topic: sessionData.topic || t('voice.call.free_title', 'Free Conversation'),
+                topicId: sessionData.topicId || null,
+                duration: durationSeconds,
+                messageCount: sessionData.messages?.length || 0,
+                transcript: sessionData.messages || []
+            });
+            if (window.SpeakEasyApp && typeof window.SpeakEasyApp.refreshUserStats === 'function') {
+                await window.SpeakEasyApp.refreshUserStats();
+            }
+            return true;
+        } catch (error) {
+            console.error('Failed to save voice session:', error);
+            showToast(t('chat.toast.save_failed', '⚠️ Failed to save session'), 'error');
+            return false;
+        }
+    }
+
+    saveGuestSession(sessionData);
+    if (typeof AppState !== 'undefined' && AppState.user) {
+        AppState.user.totalSessions = (AppState.user.totalSessions || 0) + 1;
+        AppState.user.sessionsToday = (AppState.user.sessionsToday || 0) + 1;
+    }
+    if (window.SpeakEasyApp && typeof window.SpeakEasyApp.updateStatsUI === 'function') {
+        window.SpeakEasyApp.updateStatsUI();
+    }
+    return true;
+}
+
 function initVoiceCall() {
     initVoiceControls();
     initVoiceStates();
+    initEndSession();
 }
 
 // Voice Controls
@@ -200,6 +246,10 @@ function startVoiceCall(topicData = null) {
         geminiService.initConversation(topicData);
     }
 
+    if (window.RoleplayGoals && typeof window.RoleplayGoals.initVoiceGoals === 'function') {
+        window.RoleplayGoals.initVoiceGoals(topicData);
+    }
+
     // Start timer
     startVoiceTimer();
 
@@ -309,21 +359,103 @@ function startVoiceTimer() {
 }
 
 function stopVoiceCall() {
+    console.log('🛑 Stopping voice call...');
+
+    // Stop session timer
     if (voiceCallState.sessionTimer) {
         clearInterval(voiceCallState.sessionTimer);
+        voiceCallState.sessionTimer = null;
     }
 
     // Stop speech recognition
-    if (typeof speechRecognition !== 'undefined') {
-        speechRecognition.stop();
+    if (typeof speechRecognition !== 'undefined' && speechRecognition) {
+        try {
+            speechRecognition.stop();
+            console.log('✅ Speech recognition stopped');
+        } catch (e) {
+            console.warn('⚠️ Error stopping speech recognition:', e);
+        }
     }
 
-    // Stop any ongoing speech
-    if (typeof textToSpeech !== 'undefined') {
-        textToSpeech.stop();
+    // Stop any ongoing speech synthesis
+    if (typeof textToSpeech !== 'undefined' && textToSpeech) {
+        try {
+            textToSpeech.stop();
+            console.log('✅ Text-to-speech stopped');
+        } catch (e) {
+            console.warn('⚠️ Error stopping TTS:', e);
+        }
     }
 
+    // IMPORTANT: Stop voice recorder and cleanup media streams
+    if (typeof voiceRecorder !== 'undefined' && voiceRecorder) {
+        try {
+            voiceRecorder.cleanup();
+            console.log('✅ Voice recorder cleaned up (mic stopped)');
+        } catch (e) {
+            console.warn('⚠️ Error cleaning up voice recorder:', e);
+        }
+    }
+
+    // Reset state
     voiceCallState.isActive = false;
-    console.log('🎤 Voice call ended');
+    voiceCallState.isMuted = false;
+    voiceCallState.isSpeaking = false;
+    voiceCallState.currentTranscript = '';
+
+    console.log('🎤 Voice call ended - all services stopped');
 }
 
+async function endVoiceSession() {
+    const sessionData = {
+        messages: [],
+        duration: Date.now() - (voiceCallState.sessionStartTime || Date.now()),
+        topic: voiceCallState.topic?.title || t('voice.call.free_title', 'Free Conversation'),
+        topicId: voiceCallState.topic?.id || null,
+        timestamp: new Date()
+    };
+
+    showToast(t('chat.toast.saved', '✓ Session saved! Generating report...'), 'success');
+    await persistVoiceSession(sessionData);
+}
+
+// Initialize End Session Modal
+function initEndSession() {
+    const modal = document.getElementById('end-session-modal');
+    const cancelBtn = document.getElementById('cancel-end-session');
+    const confirmBtn = document.getElementById('confirm-end-session');
+
+    if (!modal || !cancelBtn || !confirmBtn) {
+        console.warn('⚠️ End session modal elements not found');
+        return;
+    }
+
+    // Cancel button - just close modal
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        console.log('❌ End session cancelled');
+    });
+
+    // Confirm button - stop voice call and go home
+    confirmBtn.addEventListener('click', async () => {
+        modal.style.display = 'none';
+        console.log('✅ End session confirmed');
+
+        await endVoiceSession();
+
+        // Stop voice call (this will cleanup mic!)
+        stopVoiceCall();
+
+        // Go back to home
+        showScreen('home');
+    });
+
+    // Click outside modal to close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    console.log('✅ End session modal initialized');
+}

@@ -172,6 +172,7 @@ authManager.subscribe((state) => {
                 name: state.user.name,
                 email: state.user.email,
                 avatar: state.user.avatar,
+                isGuest: false,
                 ...state.user.profile
             };
         }

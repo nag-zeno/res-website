@@ -9,6 +9,14 @@
     background: var(--bg-primary);
 }
 
+#text-chat {
+    padding-bottom: 0;
+}
+
+#voice-call {
+    padding-bottom: 0;
+}
+
 .conversation-top {
     display: flex;
     justify-content: space-between;
@@ -182,6 +190,158 @@
     font-size: 14px;
 }
 
+/* Translation */
+.message-translate {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.translate-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-pressed);
+    box-shadow: var(--shadow-inset-sm);
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all var(--transition-base);
+}
+
+.translate-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.translate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.translation-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding: 8px 12px;
+    background: var(--surface-pressed);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-inset-sm);
+}
+
+/* Roleplay Goals */
+.roleplay-goals {
+    margin: var(--space-md);
+    padding: var(--space-md);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.roleplay-goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.roleplay-goals-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.roleplay-goals-progress {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.roleplay-goals-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.roleplay-goals-item {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.roleplay-goals-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.roleplay-goals-label input[type="checkbox"] {
+    accent-color: var(--accent-primary);
+}
+
+.roleplay-finish {
+    height: 42px;
+    font-size: 14px;
+}
+
+.roleplay-goals.complete {
+    border: 1px solid rgba(123, 198, 126, 0.4);
+}
+
+/* Word Lookup */
+.chat-word {
+    cursor: pointer;
+    border-bottom: 1px dashed var(--text-tertiary);
+    padding: 0 1px;
+    transition: all var(--transition-base);
+}
+
+.chat-word:hover {
+    background: var(--surface-pressed);
+    border-radius: 4px;
+}
+
+.chat-word:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.word-lookup-term {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.word-lookup-translation {
+    background: var(--surface-pressed);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: var(--space-md);
+}
+
+.word-lookup-translation.is-loading {
+    opacity: 0.7;
+}
+
+.word-lookup-translation.is-error {
+    color: var(--error);
+}
+
+.word-lookup-note {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+}
+
 /* Typing Indicator */
 .typing-dots {
     display: flex;
@@ -265,6 +425,9 @@
     padding: var(--space-md);
     background: var(--bg-primary);
     box-shadow: 0 -4px 8px var(--shadow-dark), 0 4px 8px var(--shadow-light);
+    margin: 0;
+    margin-bottom: 0 !important;
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
 }
 
 .btn-help {

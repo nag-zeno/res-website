@@ -1,6 +1,8 @@
 const express = require('express');
+const { body } = require('express-validator');
 const authMiddleware = require('../middleware/auth');
 const userController = require('../controllers/userController');
+const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
 
@@ -19,7 +21,15 @@ router.get('/profile', userController.getProfile);
  * @desc    Update user profile
  * @access  Private
  */
-router.put('/profile', userController.updateProfile);
+router.put(
+    '/profile',
+    [
+        body('name').optional().isString().trim().isLength({ min: 2, max: 80 }),
+        body('avatar').optional().isURL()
+    ],
+    validateRequest,
+    userController.updateProfile
+);
 
 /**
  * @route   GET /api/users/stats

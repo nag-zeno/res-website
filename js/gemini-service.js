@@ -13,13 +13,30 @@ class GeminiService {
 
     // Initialize with topic context
     initConversation(topicData = null) {
+        // IMPORTANT: Always reset conversation history
         this.conversationHistory = [];
+        this.systemPrompt = null;
 
-        if (topicData && topicData.title) {
-            // Topic-based conversation
-            this.systemPrompt = `You are an English conversation partner helping a student practice English. 
+        if (topicData && topicData.id) {
+            // Try to get full topic pack data
+            const topicPack = typeof TOPIC_PACKS !== 'undefined' ? TOPIC_PACKS[topicData.id] : null;
+
+            if (topicPack && topicPack.systemPrompt) {
+                // Use detailed system prompt from topic pack
+                console.log('🎯 Initializing TOPIC conversation:', topicData.title, '(with topic pack)');
+                const goals = Array.isArray(topicPack.goals) ? topicPack.goals : [];
+                if (goals.length) {
+                    const goalsText = goals.map(goal => `- ${goal}`).join('\n');
+                    this.systemPrompt = `${topicPack.systemPrompt}\n\nRoleplay goals:\n${goalsText}\n\nGuide the student to complete these goals during the conversation. Once they are completed, summarize and wrap up naturally.`;
+                } else {
+                    this.systemPrompt = topicPack.systemPrompt;
+                }
+            } else {
+                // Fallback to basic topic prompt
+                console.log('🎯 Initializing TOPIC conversation:', topicData.title, '(basic prompt)');
+                this.systemPrompt = `You are an English conversation partner helping a student practice English. 
 Topic: ${topicData.title}
-Description: ${topicData.description}
+Description: ${topicData.description || 'Practice this topic'}
 Level: ${topicData.level || 'intermediate'}
 
 Your role:
@@ -31,8 +48,10 @@ Your role:
 - Ask follow-up questions to keep the conversation going
 
 Remember: You are having a real conversation, not teaching a lesson.`;
+            }
         } else {
             // Free conversation
+            console.log('🆓 Initializing FREE conversation (no specific topic)');
             this.systemPrompt = `You are a friendly English conversation partner. 
 Your role:
 - Have natural, engaging conversations on any topic
@@ -45,7 +64,7 @@ Your role:
 Speak naturally as you would with a friend learning English.`;
         }
 
-        console.log('🤖 Gemini conversation initialized:', topicData?.title || 'Free conversation');
+        console.log('🤖 Gemini conversation initialized:', topicData?.title || '✨ FREE CONVERSATION ✨');
     }
 
     // Send message to Gemini

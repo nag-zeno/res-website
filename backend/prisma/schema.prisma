@@ -26,6 +26,7 @@ model User {
   profile  Profile?
   sessions Session[]
   settings Settings?
+  flashcards Flashcard[]
 
   @@map("users")
 }
@@ -145,4 +146,22 @@ model Settings {
   updatedAt     DateTime @updatedAt
 
   @@map("settings")
+}
+
+// ========================================
+// FLASHCARD MODEL
+// ========================================
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  term        String
+  translation String
+  sourceText  String?
+  createdAt   DateTime @default(now())
+
+  @@map("flashcards")
+  @@unique([userId, term])
+  @@index([userId])
 }

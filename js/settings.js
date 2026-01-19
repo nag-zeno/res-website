@@ -2,7 +2,7 @@
 // SETTINGS SCREEN
 // ========================================
 
-let settingsState = {
+const defaultSettingsState = {
     preferredMode: 'both',
     showHints: true,
     slowMode: false,
@@ -13,11 +13,64 @@ let settingsState = {
     language: 'en'
 };
 
+let settingsState = { ...defaultSettingsState };
+
 function t(key, fallback) {
     if (window.i18n && typeof window.i18n.translate === 'function') {
         return window.i18n.translate(key, fallback);
     }
     return fallback !== undefined ? fallback : key;
+}
+
+function isAuthenticated() {
+    return typeof authManager !== 'undefined' && authManager.isLoggedIn();
+}
+
+function getAuthUserId() {
+    if (typeof authManager !== 'undefined' && typeof authManager.getUser === 'function') {
+        return authManager.getUser()?.id || null;
+    }
+    return null;
+}
+
+function getLocalOnlySettingsKey() {
+    const userId = getAuthUserId();
+    if (isAuthenticated() && userId) {
+        return `userSettingsLocal:${userId}`;
+    }
+    return 'userSettings';
+}
+
+function getServerSettingsCacheKey() {
+    const userId = getAuthUserId();
+    if (isAuthenticated() && userId) {
+        return `userSettingsServer:${userId}`;
+    }
+    return null;
+}
+
+function getLocalOnlySettings() {
+    const key = getLocalOnlySettingsKey();
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : null;
+}
+
+function saveLocalOnlySettings(data) {
+    const key = getLocalOnlySettingsKey();
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getServerSettingsCache() {
+    const key = getServerSettingsCacheKey();
+    if (!key) return null;
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : null;
+}
+
+function saveServerSettingsCache(data) {
+    const key = getServerSettingsCacheKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(data));
 }
 
 function initSettings() {
@@ -67,8 +120,11 @@ function initProfileEdit() {
             saveTimeout = setTimeout(() => {
                 const newName = profileNameInput.value.trim();
                 if (newName) {
-                    if (typeof AppState !== 'undefined') {
+                    if (isAuthenticated()) {
+                        authManager.updateProfile({ name: newName });
+                    } else if (typeof AppState !== 'undefined') {
                         AppState.user.name = newName;
+                        AppState.user.isGuest = true;
                         saveToStorage('user', AppState.user);
                     }
 
@@ -84,7 +140,9 @@ function initProfileEdit() {
                         updateGreeting();
                     }
 
-                    showToast(t('settings.toast.name_updated', '✓ Name updated'), 'success');
+                    if (!isAuthenticated()) {
+                        showToast(t('settings.toast.name_updated', '✓ Name updated'), 'success');
+                    }
                 }
             }, 500);
         });
@@ -303,34 +361,29 @@ function initAccountActions() {
     }
 }
 
-function handleLogout() {
+async function handleLogout() {
     const logoutModal = document.getElementById('logout-modal');
     if (logoutModal) {
         logoutModal.style.display = 'none';
     }
 
-    // Clear user data
-    localStorage.removeItem('user');
-    localStorage.removeItem('hasOnboarded');
-    localStorage.removeItem('userPreferences');
-
-    // Show success message
-    showToast(t('settings.toast.logged_out', '✓ Logged out successfully'), 'success');
-
-    // Navigate to login
-    setTimeout(() => {
+    if (isAuthenticated()) {
+        await authManager.logout();
+    } else {
+        localStorage.removeItem('user');
+        showToast(t('settings.toast.logged_out', '✓ Logged out successfully'), 'success');
         showScreen('login');
+    }
 
-        // Reset app state
-        if (typeof AppState !== 'undefined') {
-            AppState.user = {
-                name: 'User',
-                streak: 0,
-                sessionsToday: 0,
-                totalSessions: 0
-            };
-        }
-    }, 500);
+    if (typeof AppState !== 'undefined') {
+        AppState.user = {
+            name: 'User',
+            streak: 0,
+            sessionsToday: 0,
+            totalSessions: 0,
+            isGuest: true
+        };
+    }
 }
 
 function handleDeleteAccount() {
@@ -396,7 +449,33 @@ function getLanguageToast(language) {
 }
 
 // Save Settings
-function saveSettings() {
+async function saveSettings() {
+    if (isAuthenticated() && typeof apiService !== 'undefined') {
+        const payload = {
+            darkMode: settingsState.darkMode,
+            showHints: settingsState.showHints,
+            slowMode: settingsState.slowMode,
+            dailyReminder: settingsState.dailyReminder,
+            preferredMode: settingsState.preferredMode
+        };
+
+        try {
+            const response = await apiService.updateSettings(payload);
+            if (response?.settings) {
+                saveServerSettingsCache(response.settings);
+            }
+        } catch (error) {
+            console.warn('Failed to update settings on backend:', error);
+        }
+
+        saveLocalOnlySettings({
+            language: settingsState.language,
+            saveRecordings: settingsState.saveRecordings,
+            analytics: settingsState.analytics
+        });
+        return;
+    }
+
     if (typeof saveToStorage === 'function') {
         saveToStorage('userSettings', settingsState);
     } else {
@@ -404,47 +483,77 @@ function saveSettings() {
     }
 }
 
-// Load Settings
-function loadSettings() {
-    let saved;
-    if (typeof loadFromStorage === 'function') {
-        saved = loadFromStorage('userSettings');
-    } else {
-        const item = localStorage.getItem('userSettings');
-        saved = item ? JSON.parse(item) : null;
-    }
+function applySettingsToUI() {
+    const modeInput = document.querySelector(`input[name="pref-mode"][value="${settingsState.preferredMode}"]`);
+    if (modeInput) modeInput.checked = true;
 
-    if (saved) {
-        settingsState = { ...settingsState, ...saved };
+    const hintsToggle = document.getElementById('setting-hints');
+    if (hintsToggle) hintsToggle.checked = settingsState.showHints;
 
-        // Apply to UI
-        const modeInput = document.querySelector(`input[name="pref-mode"][value="${settingsState.preferredMode}"]`);
-        if (modeInput) modeInput.checked = true;
+    const slowModeToggle = document.getElementById('setting-slow-mode');
+    if (slowModeToggle) slowModeToggle.checked = settingsState.slowMode;
 
-        const hintsToggle = document.getElementById('setting-hints');
-        if (hintsToggle) hintsToggle.checked = settingsState.showHints;
+    const darkModeToggle = document.getElementById('setting-dark-mode');
+    if (darkModeToggle) darkModeToggle.checked = settingsState.darkMode;
+    toggleDarkMode(settingsState.darkMode);
 
-        const slowModeToggle = document.getElementById('setting-slow-mode');
-        if (slowModeToggle) slowModeToggle.checked = settingsState.slowMode;
+    const reminderToggle = document.getElementById('setting-reminder');
+    if (reminderToggle) reminderToggle.checked = settingsState.dailyReminder;
 
-        const darkModeToggle = document.getElementById('setting-dark-mode');
-        if (darkModeToggle) darkModeToggle.checked = settingsState.darkMode;
-        // Apply dark mode
-        toggleDarkMode(settingsState.darkMode);
+    const recordingsToggle = document.getElementById('setting-save-recordings');
+    if (recordingsToggle) recordingsToggle.checked = settingsState.saveRecordings;
 
-        const reminderToggle = document.getElementById('setting-reminder');
-        if (reminderToggle) reminderToggle.checked = settingsState.dailyReminder;
-
-        const recordingsToggle = document.getElementById('setting-save-recordings');
-        if (recordingsToggle) recordingsToggle.checked = settingsState.saveRecordings;
-
-        const analyticsToggle = document.getElementById('setting-analytics');
-        if (analyticsToggle) analyticsToggle.checked = settingsState.analytics;
-    }
+    const analyticsToggle = document.getElementById('setting-analytics');
+    if (analyticsToggle) analyticsToggle.checked = settingsState.analytics;
 
     applyLanguagePreference(settingsState.language);
     const languageSelect = document.getElementById('setting-language');
     if (languageSelect) languageSelect.value = settingsState.language;
+}
+
+// Load Settings
+async function loadSettings() {
+    let saved = null;
+
+    if (isAuthenticated() && typeof apiService !== 'undefined') {
+        try {
+            const data = await apiService.getSettings();
+            saved = data?.settings || null;
+            if (saved) {
+                saveServerSettingsCache(saved);
+            }
+        } catch (error) {
+            console.warn('Failed to load settings from backend:', error);
+            saved = getServerSettingsCache();
+        }
+    } else {
+        if (typeof loadFromStorage === 'function') {
+            saved = loadFromStorage('userSettings');
+        } else {
+            const item = localStorage.getItem('userSettings');
+            saved = item ? JSON.parse(item) : null;
+        }
+    }
+
+    if (saved) {
+        settingsState = { ...settingsState, ...saved };
+    }
+
+    if (isAuthenticated()) {
+        const localOnly = getLocalOnlySettings();
+        if (localOnly) {
+            settingsState = { ...settingsState, ...localOnly };
+        } else {
+            settingsState = {
+                ...settingsState,
+                language: defaultSettingsState.language,
+                saveRecordings: defaultSettingsState.saveRecordings,
+                analytics: defaultSettingsState.analytics
+            };
+        }
+    }
+
+    applySettingsToUI();
 
     // Load profile data
     if (typeof AppState !== 'undefined' && AppState.user) {

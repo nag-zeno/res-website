@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="css/topic-library.css">
     <link rel="stylesheet" href="css/topic-mode-buttons.css">
     <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/flashcards.css">
+    <link rel="stylesheet" href="css/history.css">
 </head>
 
 <body>
@@ -467,13 +469,13 @@
                     </div>
                 </div>
                 <div class="streak-number">
-                    <span class="number">7</span>
+                    <span class="number" id="streak-count">7</span>
                     <span class="label" data-i18n="home.streak.days">days</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: 40%"></div>
+                    <div class="progress-fill" id="streak-progress" style="width: 40%"></div>
                 </div>
-                <p class="progress-label" data-i18n="home.streak.progress">2/5 sessions today</p>
+                <p class="progress-label" id="streak-progress-label" data-i18n="home.streak.progress">2/5 sessions today</p>
             </div>
 
             <!-- Quick Actions -->
@@ -500,13 +502,13 @@
                 <div class="action-card" data-action="flashcards">
                     <div class="action-icon">🃏</div>
                     <h4 data-i18n="home.actions.flashcards.title">Flashcards</h4>
-                    <p data-i18n="home.actions.flashcards.description">12 to review</p>
+                    <p id="flashcards-count" data-i18n="home.actions.flashcards.description">12 to review</p>
                 </div>
 
                 <div class="action-card" data-action="history">
                     <div class="action-icon">🕐</div>
                     <h4 data-i18n="home.actions.history.title">History</h4>
-                    <p data-i18n="home.actions.history.description">15 sessions</p>
+                    <p id="history-count" data-i18n="home.actions.history.description">15 sessions</p>
                 </div>
 
                 <div class="action-card" data-action="settings">
@@ -734,6 +736,167 @@
                 <h3 class="empty-title" data-i18n="topics.empty.title">No topics found</h3>
                 <p class="empty-subtitle" data-i18n="topics.empty.subtitle">Try a different search term</p>
                 <button class="btn-text" id="clear-search-empty" data-i18n="topics.empty.clear">Clear search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flashcards Screen -->
+    <div id="flashcards" class="screen">
+        <div class="flashcards-container">
+            <div class="top-bar">
+                <button class="btn-icon" id="back-from-flashcards">
+                    <span>←</span>
+                </button>
+                <div class="screen-title-group">
+                    <h2 class="screen-title" data-i18n="flashcards.title">Flashcards</h2>
+                    <p class="screen-subtitle" data-i18n="flashcards.subtitle">Practice key phrases</p>
+                </div>
+                <button class="btn-icon" id="shuffle-flashcards" title="Shuffle" data-i18n-title="flashcards.actions.shuffle">
+                    <span>🔀</span>
+                </button>
+            </div>
+
+            <div class="flashcard-progress" id="flashcards-progress-row">
+                <span id="flashcards-progress" data-i18n="flashcards.progress">1/12</span>
+                <span class="flashcard-hint" data-i18n="flashcards.flip_hint">Tap card to flip</span>
+            </div>
+
+            <div class="flashcard-empty" id="flashcards-empty" style="display: none;">
+                <div class="empty-icon">📘</div>
+                <h3 data-i18n="flashcards.empty.title">No flashcards yet</h3>
+                <p data-i18n="flashcards.empty.text">Tap a word in chat to save it here.</p>
+            </div>
+
+            <div class="flashcard-stage" id="flashcards-stage">
+                <button class="flashcard" id="flashcard">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-face flashcard-front">
+                            <h3 id="flashcard-front">Could you recommend a good café?</h3>
+                            <p class="flashcard-label" data-i18n="flashcards.front_label">English</p>
+                        </div>
+                        <div class="flashcard-face flashcard-back">
+                            <h3 id="flashcard-back">Bạn có thể gợi ý một quán cà phê tốt không?</h3>
+                            <p class="flashcard-label" data-i18n="flashcards.back_label">Vietnamese</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="flashcard-actions" id="flashcard-actions">
+                <button class="btn-secondary" id="flashcard-review">
+                    <span>🔁</span>
+                    <span data-i18n="flashcards.actions.review">Review</span>
+                </button>
+                <button class="btn-primary" id="flashcard-know">
+                    <span>✅</span>
+                    <span data-i18n="flashcards.actions.know">Know it</span>
+                </button>
+            </div>
+
+            <div class="flashcard-manager">
+                <div class="flashcard-add">
+                    <h3 data-i18n="flashcards.manage.title">Manage words</h3>
+                    <p class="flashcard-manage-subtitle" data-i18n="flashcards.manage.subtitle">
+                        Add your own vocabulary or remove words anytime.
+                    </p>
+                    <div class="flashcard-form">
+                        <input id="flashcard-term" type="text" data-i18n-placeholder="flashcards.form.term.placeholder"
+                            placeholder="Word (English)">
+                        <input id="flashcard-translation" type="text"
+                            data-i18n-placeholder="flashcards.form.translation.placeholder"
+                            placeholder="Meaning (Vietnamese)">
+                        <button class="btn-primary" id="flashcard-add-btn" data-i18n="flashcards.form.add">
+                            Add word
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flashcard-list-header">
+                    <h3 data-i18n="flashcards.list.title">Saved words</h3>
+                    <span class="flashcard-list-count" id="flashcard-list-count"
+                        data-i18n="flashcards.list.count">0/0</span>
+                </div>
+
+                <div class="flashcard-search">
+                    <input id="flashcard-search" type="text"
+                        data-i18n-placeholder="flashcards.list.search.placeholder"
+                        data-i18n-aria="flashcards.list.search.aria"
+                        placeholder="Search saved words">
+                </div>
+
+                <div class="flashcard-list-loading" id="flashcard-list-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p data-i18n="flashcards.list.loading">Loading words...</p>
+                </div>
+
+                <div class="flashcard-list" id="flashcard-list"></div>
+                <div class="flashcard-list-empty" id="flashcard-list-empty" style="display: none;">
+                    <div class="empty-icon">📒</div>
+                    <h4 data-i18n="flashcards.list.empty.title">No saved words yet</h4>
+                    <p data-i18n="flashcards.list.empty.text">Save words from chat or add them here.</p>
+                </div>
+                <div class="flashcard-list-empty" id="flashcard-list-no-results" style="display: none;">
+                    <div class="empty-icon">🔍</div>
+                    <h4 data-i18n="flashcards.list.no_results.title">No matches</h4>
+                    <p data-i18n="flashcards.list.no_results.text">Try a different search.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flashcard Delete Confirmation -->
+    <div class="modal-overlay" id="flashcard-delete-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-icon warning">⚠️</div>
+            <h3 class="modal-title" data-i18n="flashcards.delete.title">Delete this word?</h3>
+            <p class="modal-text" data-i18n="flashcards.delete.text">This word will be removed from your Flashcards.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="flashcard-delete-cancel" data-i18n="flashcards.delete.cancel">
+                    Cancel
+                </button>
+                <button class="btn-primary" id="flashcard-delete-confirm" data-i18n="flashcards.delete.confirm">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Screen -->
+    <div id="history" class="screen">
+        <div class="history-container">
+            <div class="top-bar">
+                <button class="btn-icon" id="back-from-history">
+                    <span>←</span>
+                </button>
+                <div class="screen-title-group">
+                    <h2 class="screen-title" data-i18n="history.title">History</h2>
+                    <p class="screen-subtitle" data-i18n="history.subtitle">Review past sessions</p>
+                </div>
+                <div class="top-bar-spacer"></div>
+            </div>
+
+            <div class="history-summary">
+                <div class="history-stat">
+                    <span class="history-stat-label" data-i18n="history.total_sessions">Total Sessions</span>
+                    <span class="history-stat-value" id="history-total">0</span>
+                </div>
+                <div class="history-stat">
+                    <span class="history-stat-label" data-i18n="history.total_minutes">Total Minutes</span>
+                    <span class="history-stat-value" id="history-minutes">0</span>
+                </div>
+            </div>
+
+            <div class="history-loading" id="history-loading" style="display: none;">
+                <div class="spinner"></div>
+                <p data-i18n="history.loading">Loading history...</p>
+            </div>
+
+            <div class="history-list" id="history-list"></div>
+
+            <div class="history-empty" id="history-empty" style="display: none;">
+                <div class="empty-icon">🕐</div>
+                <h3 data-i18n="history.empty.title">No sessions yet</h3>
+                <p data-i18n="history.empty.text">Complete a conversation to see it here.</p>
             </div>
         </div>
     </div>
@@ -991,7 +1154,7 @@
                     <span>←</span>
                 </button>
                 <div class="call-info">
-                    <h3 class="call-title" data-i18n="topics.cards.orderingCoffee.title">Ordering Coffee</h3>
+                    <h3 class="call-title">Free Conversation</h3>
                     <p class="call-subtitle" data-i18n="voice.call.subtitle">AI Conversation Partner</p>
                 </div>
                 <button class="btn-icon-voice" id="voice-menu">
@@ -1025,6 +1188,17 @@
                 <div class="voice-status">
                     <p class="status-text" id="voice-status-text" data-i18n="voice.status.listening">Listening...</p>
                     <p class="status-hint" id="voice-status-hint" data-i18n="voice.status.hint">Speak naturally</p>
+                </div>
+
+                <!-- Roleplay Goals -->
+                <div class="roleplay-goals voice-goals" id="voice-roleplay-goals" style="display: none;">
+                    <div class="roleplay-goals-header">
+                        <h4 data-i18n="goals.title">Roleplay Goals</h4>
+                        <span class="roleplay-goals-progress" id="voice-roleplay-goals-progress">0/0</span>
+                    </div>
+                    <ul class="roleplay-goals-list" id="voice-roleplay-goals-list"></ul>
+                    <button class="btn-primary roleplay-finish" id="voice-roleplay-finish" disabled
+                        data-i18n="goals.finish">Finish roleplay</button>
                 </div>
 
                 <!-- Live Transcript (optional, can be hidden) -->
@@ -1066,12 +1240,23 @@
                     <span>✕</span>
                 </button>
                 <div class="topic-info">
-                    <h3 class="topic-title" data-i18n="topics.cards.orderingCoffee.title">Ordering Coffee</h3>
+                    <h3 class="topic-title">Free Conversation</h3>
                     <span class="session-time">00:00</span>
                 </div>
                 <button class="btn-icon" id="conversation-menu">
                     <span>⋮</span>
                 </button>
+            </div>
+
+            <!-- Roleplay Goals -->
+            <div class="roleplay-goals" id="roleplay-goals" style="display: none;">
+                <div class="roleplay-goals-header">
+                    <h4 data-i18n="goals.title">Roleplay Goals</h4>
+                    <span class="roleplay-goals-progress" id="roleplay-goals-progress">0/0</span>
+                </div>
+                <ul class="roleplay-goals-list" id="roleplay-goals-list"></ul>
+                <button class="btn-primary roleplay-finish" id="roleplay-finish" disabled
+                    data-i18n="goals.finish">Finish roleplay</button>
             </div>
 
             <!-- Chat Messages Area -->
@@ -1083,23 +1268,9 @@
                     </div>
                 </div>
 
-                <!-- AI Message -->
-                <div class="message-wrapper ai">
-                    <div class="message ai-message">
-                        <div class="message-content">
-                            <p data-i18n="chat.sample.ai_message">Hello! I'm your AI conversation partner. Let's
-                                practice ordering coffee at a café. I'll
-                                be the barista. What would you like to order?</p>
-                        </div>
-                        <div class="message-meta">
-                            <span class="timestamp" data-i18n="common.just_now">Just now</span>
-                        </div>
-                        <button class="audio-play-btn">
-                            <span class="play-icon">▶️</span>
-                            <span class="duration">0:08</span>
-                        </button>
-                    </div>
-                </div>
+
+                <!-- AI messages will be added dynamically by JavaScript -->
+                <!-- No hardcoded AI message here -->
 
                 <!-- Typing Indicator (hidden by default) -->
                 <div class="message-wrapper ai typing-indicator" style="display: none;">
@@ -1111,7 +1282,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- End chat-messages -->
 
             <!-- Hint Chips (above input) -->
             <div class="hint-chips" id="hint-chips">
@@ -1154,8 +1325,8 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> <!-- End conversation-container -->
+    </div> <!-- End #text-chat -->
 
     <!-- Help Me Say This Bottom Sheet -->
     <div class="bottom-sheet-overlay" id="help-sheet-overlay" style="display: none;">
@@ -1249,17 +1420,43 @@
         </div>
     </div>
 
+    <!-- Word Lookup Modal -->
+    <div class="modal-overlay" id="word-lookup-modal" style="display: none;">
+        <div class="modal word-lookup-modal">
+            <div class="modal-icon">📘</div>
+            <h3 class="modal-title" data-i18n="flashcards.lookup.title">Word meaning</h3>
+            <div class="word-lookup-term" id="word-lookup-term">shy</div>
+            <div class="word-lookup-translation" id="word-lookup-translation">...</div>
+            <p class="word-lookup-note" data-i18n="flashcards.lookup.note">Save this word for flashcards?</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="word-lookup-close" data-i18n="flashcards.lookup.close">Close</button>
+                <button class="btn-primary" id="word-lookup-save" data-i18n="flashcards.lookup.save">Save to Flashcards</button>
+            </div>
+        </div>
+    </div>
+
     <!-- AI & Voice Services (Load first) -->
     <script src="js/gemini-service.js"></script>
     <script src="js/voice-service.js"></script>
+    <script src="js/api-service.js"></script>
+    <script src="js/auth-manager.js"></script>
+
+    <!-- Topic Packs Data -->
+    <script src="js/topic-packs.js"></script>
+    <script src="js/topic-packs-part2.js"></script>
+
     <script src="js/topic-mode-buttons.js"></script>
     <script src="js/i18n.js"></script>
 
     <!-- App Scripts -->
     <script src="js/settings.js"></script>
     <script src="js/topic-library.js"></script>
+    <script src="js/roleplay-goals.js"></script>
     <script src="js/voice-call.js"></script>
     <script src="js/conversation.js"></script>
+    <script src="js/topic-pack-hints-integration.js"></script>
+    <script src="js/flashcards.js"></script>
+    <script src="js/history.js"></script>
     <script src="js/app.js"></script>
 </body>
 

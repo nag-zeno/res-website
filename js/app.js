@@ -16,6 +16,204 @@ function tFormat(key, values, fallback) {
     return fallback !== undefined ? fallback : key;
 }
 
+function hasAuthBackend() {
+    return typeof authManager !== 'undefined' && typeof apiService !== 'undefined';
+}
+
+function isAuthenticated() {
+    return hasAuthBackend() && authManager.isLoggedIn();
+}
+
+async function syncAuthenticatedState() {
+    await migrateGuestData();
+
+    if (typeof loadSettings === 'function') {
+        try {
+            await loadSettings();
+        } catch (error) {
+            console.warn('Failed to load settings from backend:', error);
+        }
+    }
+
+    await refreshUserStats();
+
+    if (typeof refreshFlashcards === 'function') {
+        try {
+            await refreshFlashcards();
+        } catch (error) {
+            console.warn('Failed to load flashcards from backend:', error);
+        }
+    }
+}
+
+function safeJsonParse(value, fallback) {
+    if (!value) return fallback;
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function toIsoDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+}
+
+async function migrateGuestData() {
+    if (!isAuthenticated() || typeof apiService === 'undefined') {
+        return;
+    }
+
+    const userId = authManager.getUser()?.id;
+    if (!userId) return;
+
+    const migrationKey = `guestMigration:${userId}`;
+    if (localStorage.getItem(migrationKey) === 'done') {
+        return;
+    }
+
+    const guestSettingsRaw = localStorage.getItem('userSettings');
+    const guestSessionsRaw = localStorage.getItem('guestSessions');
+    const guestFlashcardsRaw = localStorage.getItem('guestFlashcards');
+
+    const hasGuestData = Boolean(guestSettingsRaw || guestSessionsRaw || guestFlashcardsRaw);
+    if (!hasGuestData) {
+        return;
+    }
+
+    showToast(t('auth.toast.migrating', 'Migrating guest data...'), 'info');
+
+    let hadError = false;
+    let pendingSessions = false;
+    let pendingFlashcards = false;
+    let settingsMigrated = true;
+
+    if (guestSettingsRaw) {
+        const guestSettings = safeJsonParse(guestSettingsRaw, null);
+        if (guestSettings) {
+            const serverSettings = {};
+            if (typeof guestSettings.darkMode === 'boolean') serverSettings.darkMode = guestSettings.darkMode;
+            if (typeof guestSettings.showHints === 'boolean') serverSettings.showHints = guestSettings.showHints;
+            if (typeof guestSettings.slowMode === 'boolean') serverSettings.slowMode = guestSettings.slowMode;
+            if (typeof guestSettings.dailyReminder === 'boolean') serverSettings.dailyReminder = guestSettings.dailyReminder;
+            if (typeof guestSettings.preferredMode === 'string') {
+                serverSettings.preferredMode = guestSettings.preferredMode;
+            }
+
+            try {
+                if (Object.keys(serverSettings).length) {
+                    await apiService.updateSettings(serverSettings);
+                }
+
+                const localOnly = {
+                    language: guestSettings.language,
+                    saveRecordings: guestSettings.saveRecordings,
+                    analytics: guestSettings.analytics
+                };
+                localStorage.setItem(`userSettingsLocal:${userId}`, JSON.stringify(localOnly));
+            } catch (error) {
+                settingsMigrated = false;
+                hadError = true;
+                console.warn('Failed to migrate settings:', error);
+            }
+        }
+    }
+
+    if (guestSessionsRaw) {
+        const guestSessions = safeJsonParse(guestSessionsRaw, []);
+        for (const session of guestSessions) {
+            if (session?.migrated) continue;
+
+            const messages = Array.isArray(session?.messages)
+                ? session.messages
+                : Array.isArray(session?.transcript)
+                    ? session.transcript
+                    : [];
+
+            const topic = typeof session?.topic === 'string' && session.topic.trim()
+                ? session.topic
+                : t('voice.call.free_title', 'Free Conversation');
+
+            const durationSeconds = Math.max(0, Math.floor((session?.duration || 0) / 1000));
+            const createdAt = session?.timestamp || session?.createdAt || null;
+            const createdAtIso = toIsoDate(createdAt);
+
+            try {
+                await apiService.createSession({
+                    topic,
+                    topicId: session?.topicId || null,
+                    duration: durationSeconds,
+                    messageCount: messages.length,
+                    transcript: messages,
+                    createdAt: createdAtIso || undefined,
+                    migrate: true
+                });
+                session.migrated = true;
+            } catch (error) {
+                hadError = true;
+                pendingSessions = true;
+                console.warn('Failed to migrate session:', error);
+            }
+        }
+
+        const remaining = guestSessions.filter((session) => !session?.migrated);
+        if (remaining.length) {
+            pendingSessions = true;
+            localStorage.setItem('guestSessions', JSON.stringify(guestSessions));
+        } else {
+            localStorage.removeItem('guestSessions');
+        }
+    }
+
+    if (guestFlashcardsRaw) {
+        const guestFlashcards = safeJsonParse(guestFlashcardsRaw, []);
+        for (const card of guestFlashcards) {
+            if (card?.migrated) continue;
+            const term = (card?.term || '').trim();
+            const translation = (card?.translation || '').trim();
+            if (!term || !translation) {
+                card.migrated = true;
+                continue;
+            }
+
+            try {
+                await apiService.addFlashcard({
+                    term,
+                    translation,
+                    sourceText: card?.sourceText || ''
+                });
+                card.migrated = true;
+            } catch (error) {
+                hadError = true;
+                pendingFlashcards = true;
+                console.warn('Failed to migrate flashcard:', error);
+            }
+        }
+
+        const remaining = guestFlashcards.filter((card) => !card?.migrated);
+        if (remaining.length) {
+            pendingFlashcards = true;
+            localStorage.setItem('guestFlashcards', JSON.stringify(guestFlashcards));
+        } else {
+            localStorage.removeItem('guestFlashcards');
+        }
+    }
+
+    if (settingsMigrated) {
+        localStorage.removeItem('userSettings');
+    }
+
+    if (!pendingSessions && !pendingFlashcards && settingsMigrated && !hadError) {
+        localStorage.setItem(migrationKey, 'done');
+        showToast(t('auth.toast.migrated', '✓ Guest data synced'), 'success');
+    } else {
+        showToast(t('auth.toast.migrate_partial', '⚠️ Some guest data could not be synced'), 'warning');
+    }
+}
+
 function initAuth() {
     initLoginForm();
     initSignupForm();
@@ -54,16 +252,35 @@ function initLoginForm() {
         submitBtn.textContent = t('auth.toast.login_loading', 'Signing in...');
         submitBtn.disabled = true;
 
-        // Simulate API call
-        await simulateAPICall(1500);
+        let loginSucceeded = false;
 
-        // For demo: accept any email/password
-        console.log('Login:', { email, password });
+        if (hasAuthBackend()) {
+            const result = await authManager.login(email, password);
+            loginSucceeded = result.success;
+            if (loginSucceeded) {
+                await syncAuthenticatedState();
+            }
+        } else {
+            // Simulate API call
+            await simulateAPICall(1500);
 
-        // Save user
-        AppState.user.name = email.split('@')[0];
-        AppState.user.email = email;
-        saveToStorage('user', AppState.user);
+            // For demo: accept any email/password
+            console.log('Login:', { email, password });
+
+            // Save user (guest/local mode)
+            AppState.user.name = email.split('@')[0];
+            AppState.user.email = email;
+            AppState.user.isGuest = false;
+            saveToStorage('user', AppState.user);
+
+            loginSucceeded = true;
+        }
+
+        if (!loginSucceeded) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
 
         // Success
         submitBtn.textContent = t('auth.toast.login_success', '✓ Success!');
@@ -123,16 +340,35 @@ function initSignupForm() {
         submitBtn.textContent = t('auth.toast.signup_loading', 'Creating account...');
         submitBtn.disabled = true;
 
-        // Simulate API call
-        await simulateAPICall(2000);
+        let signupSucceeded = false;
 
-        // For demo: create account
-        console.log('Signup:', { name, email, password });
+        if (hasAuthBackend()) {
+            const result = await authManager.register(email, password, name);
+            signupSucceeded = result.success;
+            if (signupSucceeded) {
+                await syncAuthenticatedState();
+            }
+        } else {
+            // Simulate API call
+            await simulateAPICall(2000);
 
-        // Save user
-        AppState.user.name = name;
-        AppState.user.email = email;
-        saveToStorage('user', AppState.user);
+            // For demo: create account
+            console.log('Signup:', { name, email, password });
+
+            // Save user (guest/local mode)
+            AppState.user.name = name;
+            AppState.user.email = email;
+            AppState.user.isGuest = false;
+            saveToStorage('user', AppState.user);
+
+            signupSucceeded = true;
+        }
+
+        if (!signupSucceeded) {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
 
         // Success
         submitBtn.textContent = t('auth.toast.signup_success', '✓ Account Created!');
@@ -173,6 +409,7 @@ function initSocialLogin() {
         console.log('Continue as guest');
         AppState.user.name = 'Guest';
         AppState.user.isGuest = true;
+        saveToStorage('user', AppState.user);
 
         const hasOnboarded = localStorage.getItem('hasOnboarded');
         if (hasOnboarded) {
@@ -196,6 +433,7 @@ async function handleSocialLogin(provider) {
     AppState.user.name = `${providerName} User`;
     AppState.user.email = `user@${provider}.com`;
     AppState.user.provider = provider;
+    AppState.user.isGuest = true;
     saveToStorage('user', AppState.user);
 
     showToast(tFormat('auth.toast.social_connected', { provider: providerName }, `✓ Connected with ${providerName}!`), 'success');
@@ -398,7 +636,8 @@ const AppState = {
         name: 'User',
         streak: 7,
         sessionsToday: 2,
-        totalSessions: 15
+        totalSessions: 15,
+        isGuest: true
     }
 };
 
@@ -620,6 +859,7 @@ function initHome() {
 
     // Update greeting based on time
     updateGreeting();
+    updateStatsUI();
 }
 
 function updateGreeting() {
@@ -633,6 +873,76 @@ function updateGreeting() {
     else greeting = t('home.greeting.night', 'Good night');
 
     greetingEl.textContent = `${greeting}, ${AppState.user.name}! 👋`;
+}
+
+function updateStatsUI() {
+    const streakEl = document.getElementById('streak-count');
+    const progressEl = document.getElementById('streak-progress');
+    const progressLabelEl = document.getElementById('streak-progress-label');
+    const historyCountEl = document.getElementById('history-count');
+
+    const streak = Number(AppState.user.streak) || 0;
+    const sessionsToday = Number(AppState.user.sessionsToday) || 0;
+    const totalSessions = Number(AppState.user.totalSessions) || 0;
+    const dailyGoal = 5;
+    const progress = dailyGoal > 0 ? Math.min(100, (sessionsToday / dailyGoal) * 100) : 0;
+
+    if (streakEl) {
+        streakEl.textContent = streak;
+    }
+
+    if (progressEl) {
+        progressEl.style.width = `${progress}%`;
+    }
+
+    if (progressLabelEl) {
+        progressLabelEl.removeAttribute('data-i18n');
+        progressLabelEl.textContent = tFormat(
+            'home.streak.progress_dynamic',
+            { count: sessionsToday, goal: dailyGoal },
+            `${sessionsToday}/${dailyGoal} sessions today`
+        );
+    }
+
+    if (historyCountEl) {
+        historyCountEl.removeAttribute('data-i18n');
+        historyCountEl.textContent = tFormat(
+            'home.actions.history.count',
+            { count: totalSessions },
+            `${totalSessions} sessions`
+        );
+    }
+}
+
+async function refreshUserStats() {
+    if (!isAuthenticated()) {
+        updateStatsUI();
+        return;
+    }
+
+    try {
+        const data = await apiService.getStats();
+        const stats = data?.stats || {};
+
+        AppState.user.streak = stats.streak ?? 0;
+        AppState.user.totalSessions = stats.totalSessions ?? 0;
+        AppState.user.sessionsToday = stats.sessionsToday ?? 0;
+
+        if (stats.sessionsToday === undefined && Array.isArray(stats.recentActivity)) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            AppState.user.sessionsToday = stats.recentActivity.filter((entry) => {
+                const entryDate = new Date(entry.date);
+                entryDate.setHours(0, 0, 0, 0);
+                return entryDate.getTime() === today.getTime();
+            }).length;
+        }
+
+        updateStatsUI();
+    } catch (error) {
+        console.warn('Failed to refresh user stats:', error);
+        updateStatsUI();
+    }
 }
 
 function handleQuickAction(action) {
@@ -665,10 +975,18 @@ function handleQuickAction(action) {
             break;
 
         case 'flashcards':
-            showToast(t('home.toast.flashcards_soon', 'Flashcards screen coming soon!'), 'info');
+            if (typeof openFlashcards === 'function') {
+                openFlashcards();
+            } else {
+                showScreen('flashcards');
+            }
             break;
         case 'history':
-            showToast(t('home.toast.history_soon', 'History screen coming soon!'), 'info');
+            if (typeof openHistory === 'function') {
+                openHistory();
+            } else {
+                showScreen('history');
+            }
             break;
         case 'settings':
             if (typeof openSettings === 'function') {
@@ -699,6 +1017,18 @@ function initBottomNav() {
                     openSettings();
                 } else {
                     showScreen('settings');
+                }
+            } else if (targetScreen === 'flashcards') {
+                if (typeof openFlashcards === 'function') {
+                    openFlashcards();
+                } else {
+                    showScreen('flashcards');
+                }
+            } else if (targetScreen === 'history') {
+                if (typeof openHistory === 'function') {
+                    openHistory();
+                } else {
+                    showScreen('history');
                 }
             } else {
                 const screenLabel = item.querySelector('.nav-label')?.textContent || targetScreen;
@@ -813,6 +1143,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initVoiceCall();
     initTopicLibrary();
     initSettings();
+    if (typeof initFlashcards === 'function') {
+        initFlashcards();
+    }
+    if (typeof initHistory === 'function') {
+        initHistory();
+    }
 
     // Load dark mode preference
     const darkModePreference = localStorage.getItem('darkMode');
@@ -820,23 +1156,47 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('dark-mode');
     }
 
-    // Check if user is already logged in
-    const savedUser = loadFromStorage('user');
-    if (savedUser) {
-        AppState.user = savedUser;
-        console.log('✓ User session found:', savedUser.name);
+    (async () => {
+        let authenticated = false;
 
-        // Check if onboarded
-        const hasOnboarded = localStorage.getItem('hasOnboarded');
-        if (hasOnboarded) {
-            showScreen('home');
-        } else {
-            showScreen('onboarding-goal');
+        if (hasAuthBackend()) {
+            try {
+                authenticated = await authManager.init();
+                if (authenticated) {
+                    await syncAuthenticatedState();
+                }
+            } catch (error) {
+                console.warn('Auth init failed:', error);
+                authenticated = false;
+            }
         }
-    } else {
-        // No user session, show login
-        showScreen('login');
-    }
+
+        if (authenticated) {
+            const hasOnboarded = localStorage.getItem('hasOnboarded');
+            if (hasOnboarded) {
+                showScreen('home');
+            } else {
+                showScreen('onboarding-goal');
+            }
+            return;
+        }
+
+        // Guest/local session fallback
+        const savedUser = loadFromStorage('user');
+        if (savedUser && savedUser.isGuest) {
+            AppState.user = savedUser;
+            console.log('✓ Guest session found:', savedUser.name);
+
+            const hasOnboarded = localStorage.getItem('hasOnboarded');
+            if (hasOnboarded) {
+                showScreen('home');
+            } else {
+                showScreen('onboarding-goal');
+            }
+        } else {
+            showScreen('login');
+        }
+    })();
 
     // Add button ripple effects
     document.querySelectorAll('.btn-primary, .action-card, .goal-card').forEach(btn => {
@@ -908,6 +1268,7 @@ function timeAgo(date) {
 
 function refreshLocalizedUI() {
     updateGreeting();
+    updateStatsUI();
 
     const levelRange = document.getElementById('level-range');
     if (levelRange) {
@@ -951,5 +1312,7 @@ window.SpeakEasyApp = {
     saveToStorage,
     loadFromStorage,
     timeAgo,
-    refreshLocalizedUI
+    refreshLocalizedUI,
+    refreshUserStats,
+    updateStatsUI
 };

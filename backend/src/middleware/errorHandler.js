@@ -26,6 +26,20 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({
+            error: 'Forbidden',
+            message: 'CORS origin not allowed'
+        });
+    }
+
+    if (err.type === 'entity.too.large') {
+        return res.status(413).json({
+            error: 'Payload Too Large',
+            message: 'Request payload is too large'
+        });
+    }
+
     // Default error
     res.status(err.status || 500).json({
         error: err.name || 'Internal Server Error',
